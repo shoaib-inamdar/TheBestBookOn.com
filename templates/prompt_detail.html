@@ -14,9 +14,9 @@
 
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <div class="prompt-tags">
-            {% if prompt.tag1 %}<span class="tag">{{ prompt.tag1 }}</span>{% endif %}
-            {% if prompt.tag2 %}<span class="tag">{{ prompt.tag2 }}</span>{% endif %}
-            {% if prompt.tag3 %}<span class="tag">{{ prompt.tag3 }}</span>{% endif %}
+            {% for tag in prompt.display_tags %}
+            <span class="tag">{{ tag }}</span>
+            {% endfor %}
         </div>
         <button class="btn btn-primary" onclick="openModal('submitBookModal')">Nominate a Book</button>
     </div>
@@ -92,6 +92,15 @@
                 <textarea name="comment" rows="3"></textarea>
             </div>
 
+            <div class="form-group">
+                <label>Tags for this book (Optional)</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" name="tag1" placeholder="Tag 1">
+                    <input type="text" name="tag2" placeholder="Tag 2">
+                    <input type="text" name="tag3" placeholder="Tag 3">
+                </div>
+            </div>
+
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
                 <button type="button" class="btn btn-outline"
                     onclick="closeModal('submitBookModal'); resetSearch();">Cancel</button>
@@ -105,85 +114,85 @@
 
 {% block scripts %}
 <script>
-// Modal Logic
-function openModal(id) { document.getElementById(id).classList.add('active'); }
-function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-window.onclick = function(event) {
-    if (event.target.classList.contains('modal-overlay')) {
-        event.target.classList.remove('active');
+    // Modal Logic
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    window.onclick = function (event) {
+        if (event.target.classList.contains('modal-overlay')) {
+            event.target.classList.remove('active');
+        }
     }
-}
 
-function resetSearch() {
-    document.getElementById('bookSearchInput').value = '';
-    document.getElementById('searchResults').innerHTML = '';
-    document.getElementById('searchResults').classList.remove('active');
-    document.getElementById('submitForm').style.display = 'none';
-}
-
-// Search Logic for Nomination
-let debounceTimer;
-const searchInput = document.getElementById('bookSearchInput');
-const resultsDiv = document.getElementById('searchResults');
-
-searchInput.addEventListener('input', (e) => {
-    clearTimeout(debounceTimer);
-    const query = e.target.value;
-    if (query.length < 3) {
-        resultsDiv.classList.remove('active');
-        return;
+    function resetSearch() {
+        document.getElementById('bookSearchInput').value = '';
+        document.getElementById('searchResults').innerHTML = '';
+        document.getElementById('searchResults').classList.remove('active');
+        document.getElementById('submitForm').style.display = 'none';
     }
-    
-    debounceTimer = setTimeout(async () => {
-        const res = await fetch(`/api/search_books?q=${encodeURIComponent(query)}`);
-        const data = await res.json();
-        
-        resultsDiv.innerHTML = '';
-        if (data.docs) {
-            data.docs.forEach(doc => {
-                const div = document.createElement('div');
-                div.className = 'search-result-item';
-                div.innerHTML = `
+
+    // Search Logic for Nomination
+    let debounceTimer;
+    const searchInput = document.getElementById('bookSearchInput');
+    const resultsDiv = document.getElementById('searchResults');
+
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(debounceTimer);
+        const query = e.target.value;
+        if (query.length < 3) {
+            resultsDiv.classList.remove('active');
+            return;
+        }
+
+        debounceTimer = setTimeout(async () => {
+            const res = await fetch(`/api/search_books?q=${encodeURIComponent(query)}`);
+            const data = await res.json();
+
+            resultsDiv.innerHTML = '';
+            if (data.docs) {
+                data.docs.forEach(doc => {
+                    const div = document.createElement('div');
+                    div.className = 'search-result-item';
+                    div.innerHTML = `
                     <img class="search-result-cover" src="${doc.cover_i ? 'https://covers.openlibrary.org/b/id/' + doc.cover_i + '-S.jpg' : ''}">
                     <div>
                         <div style="font-weight:bold">${doc.title}</div>
                         <div style="font-size:0.8rem">${doc.author_name ? doc.author_name[0] : ''} (${doc.first_publish_year || ''})</div>
                     </div>
                 `;
-                div.onclick = () => selectBook(doc);
-                resultsDiv.appendChild(div);
-            });
-            resultsDiv.classList.add('active');
+                    div.onclick = () => selectBook(doc);
+                    resultsDiv.appendChild(div);
+                });
+                resultsDiv.classList.add('active');
+            }
+        }, 300);
+    });
+
+    function selectBook(doc) {
+        // PREFER EDITION KEY
+        // If edition_key array exists, take the first one. Else fall back to Work Key (split from key)
+        let key = '';
+        if (doc.edition_key && doc.edition_key.length > 0) {
+            key = doc.edition_key[0];
+        } else {
+            key = doc.key.split('/').pop(); // "OL123W" likely
         }
-    }, 300);
-});
 
-function selectBook(doc) {
-    // PREFER EDITION KEY
-    // If edition_key array exists, take the first one. Else fall back to Work Key (split from key)
-    let key = '';
-    if (doc.edition_key && doc.edition_key.length > 0) {
-        key = doc.edition_key[0];
-    } else {
-        key = doc.key.split('/').pop(); // "OL123W" likely
-    }
+        document.getElementById('selectedEditionKey').value = key;
+        document.getElementById('selectedTitleInput').value = doc.title;
+        document.getElementById('selectedCoverId').value = doc.cover_i || '';
 
-    document.getElementById('selectedEditionKey').value = key;
-    document.getElementById('selectedTitleInput').value = doc.title;
-    document.getElementById('selectedCoverId').value = doc.cover_i || '';
-    
-    document.getElementById('selectedTitleDisplay').innerText = doc.title;
-    
-    const coverImg = document.getElementById('selectedCover');
-    if(doc.cover_i) {
-        coverImg.src = `https://covers.openlibrary.org/b/id/${doc.cover_i}-S.jpg`;
-        coverImg.style.display = 'block';
-    } else {
-        coverImg.style.display = 'none';
+        document.getElementById('selectedTitleDisplay').innerText = doc.title;
+
+        const coverImg = document.getElementById('selectedCover');
+        if (doc.cover_i) {
+            coverImg.src = `https://covers.openlibrary.org/b/id/${doc.cover_i}-S.jpg`;
+            coverImg.style.display = 'block';
+        } else {
+            coverImg.style.display = 'none';
+        }
+
+        document.getElementById('submitForm').style.display = 'block';
+        resultsDiv.classList.remove('active');
     }
-    
-    document.getElementById('submitForm').style.display = 'block';
-    resultsDiv.classList.remove('active');
-}
 </script>
 {% endblock %}

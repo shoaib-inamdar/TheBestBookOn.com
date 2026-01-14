@@ -26,9 +26,6 @@ class Prompt(Base):
     title = Column(String, index=True)
     description = Column(String)
     creator_username = Column(String)
-    tag1 = Column(String, nullable=True)
-    tag2 = Column(String, nullable=True)
-    tag3 = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     submissions = relationship("Submission", back_populates="prompt")
@@ -41,7 +38,11 @@ class Submission(Base):
     submitter_username = Column(String)
     # Cached metadata to avoid API hammer
     title = Column(String)
-    cover_id = Column(Integer, nullable=True) 
+    cover_id = Column(Integer, nullable=True)
+    # Tags on submission now
+    tag1 = Column(String, nullable=True)
+    tag2 = Column(String, nullable=True)
+    tag3 = Column(String, nullable=True) 
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     prompt = relationship("Prompt", back_populates="submissions")
@@ -116,17 +117,28 @@ def read_root(request: Request, db: Session = Depends(get_db), user: str = Depen
         # Count unique voters
         # This is a bit inefficient (n+1) but fine for "few hundred prompts" limit
         voter_ids = set()
+        tag_counts = {}
+        
         for s in subs:
             for v in s.votes:
                 voter_ids.add(v.voter_username)
+            # Aggregate tags
+            for t in [s.tag1, s.tag2, s.tag3]:
+                if t:
+                    tag_counts[t] = tag_counts.get(t, 0) + 1
+                    
         total_voters = len(voter_ids)
+        
+        # Get top 3 tags
+        top_tags = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+        display_tags = [t[0] for t in top_tags]
         
         prompts_data.append({
             "id": p.id,
             "title": p.title,
             "description": p.description,
             "creator_username": p.creator_username,
-            "tag1": p.tag1, "tag2": p.tag2, "tag3": p.tag3,
+            "display_tags": display_tags,
             "top_books": top_3,
             "total_books": len(subs),
             "total_votes": total_votes,
@@ -145,9 +157,16 @@ def read_prompt(prompt_id: int, request: Request, db: Session = Depends(get_db),
     # Sort submissions by score
     submissions.sort(key=lambda s: s.score, reverse=True)
     
-    # Check if user voted
+    # Check if user voted & Aggregate tags for display on detail page
+    tag_counts = {}
     for sub in submissions:
         sub.user_has_voted = any(v.voter_username == user for v in sub.votes)
+        for t in [sub.tag1, sub.tag2, sub.tag3]:
+            if t:
+                tag_counts[t] = tag_counts.get(t, 0) + 1
+    
+    top_tags = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+    prompt.display_tags = [t[0] for t in top_tags]
     
     return templates.TemplateResponse("prompt_detail.html", {
         "request": request, 
@@ -161,19 +180,13 @@ def read_prompt(prompt_id: int, request: Request, db: Session = Depends(get_db),
 def create_prompt(
     title: str = Form(...),
     description: str = Form(...),
-    tag1: str = Form(None),
-    tag2: str = Form(None),
-    tag3: str = Form(None),
     db: Session = Depends(get_db),
     user: str = Depends(get_current_user)
 ):
     new_prompt = Prompt(
         title=title,
         description=description,
-        creator_username=user,
-        tag1=tag1,
-        tag2=tag2,
-        tag3=tag3
+        creator_username=user
     )
     db.add(new_prompt)
     db.commit()
@@ -195,6 +208,9 @@ def submit_book(
     edition_key: str = Form(...),
     title: str = Form(...),
     cover_id: int = Form(None),
+    tag1: str = Form(None),
+    tag2: str = Form(None),
+    tag3: str = Form(None),
     comment: str = Form(None),
     db: Session = Depends(get_db),
     user: str = Depends(get_current_user)
@@ -212,6 +228,7 @@ def submit_book(
             openlibrary_edition_key=edition_key,
             title=title,
             cover_id=cover_id,
+            tag1=tag1, tag2=tag2, tag3=tag3,
             submitter_username=user
         )
         db.add(submission)

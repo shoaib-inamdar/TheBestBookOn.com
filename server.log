@@ -1,38 +1,6 @@
 INFO:     Will watch for changes in these directories: ['/Users/internetarchive/Projects/TheBestBookOn.com']
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [65093] using StatReload
-INFO:     Started server process [65105]
+INFO:     Started reloader process [66333] using StatReload
+INFO:     Started server process [66348]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     127.0.0.1:49252 - "GET /prompts/1 HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:49252 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:49252 - "GET /prompts/1 HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:49252 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:49278 - "GET /prompts HTTP/1.1" 405 Method Not Allowed
-INFO:     127.0.0.1:49278 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:49278 - "GET /prompts HTTP/1.1" 405 Method Not Allowed
-INFO:     127.0.0.1:49278 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:49423 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49423 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:49424 - "GET /static/style.css HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49424 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49424 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:49423 - "GET /static/style.css HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49740 - "POST /prompts HTTP/1.1" 303 See Other
-INFO:     127.0.0.1:49740 - "GET /prompts/1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49740 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:49741 - "GET /static/style.css HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49765 - "GET /api/search_books?q=dictator%27s%20hand HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49765 - "GET /api/search_books?q=dictator%27s%20handbook HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49765 - "POST /prompts/1/submit HTTP/1.1" 303 See Other
-INFO:     127.0.0.1:49765 - "GET /prompts/1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49765 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:49765 - "GET /static/style.css HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49815 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49815 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:49820 - "GET /static/style.css HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50243 - "GET /prompts/1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50243 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:50244 - "GET /static/style.css HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50953 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:50953 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found

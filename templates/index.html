@@ -50,9 +50,9 @@
                 <span>By <strong>{{ prompt.creator_username }}</strong></span>
                 <span style="margin: 0 5px;">•</span>
                 <div class="prompt-tags" style="margin: 0; display: inline;">
-                    {% if prompt.tag1 %}<span class="tag">{{ prompt.tag1 }}</span>{% endif %}
-                    {% if prompt.tag2 %}<span class="tag">{{ prompt.tag2 }}</span>{% endif %}
-                    {% if prompt.tag3 %}<span class="tag">{{ prompt.tag3 }}</span>{% endif %}
+                    {% for tag in prompt.display_tags %}
+                    <span class="tag">{{ tag }}</span>
+                    {% endfor %}
                 </div>
             </div>
 
@@ -79,14 +79,6 @@
                 <label>Description (Context)</label>
                 <textarea name="description" rows="3" placeholder="What kind of books are you looking for?"
                     required></textarea>
-            </div>
-            <div class="form-group">
-                <label>Tags (Optional)</label>
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" name="tag1" placeholder="Tag 1">
-                    <input type="text" name="tag2" placeholder="Tag 2">
-                    <input type="text" name="tag3" placeholder="Tag 3">
-                </div>
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
                 <button type="button" class="btn btn-outline" onclick="closeModal('createPromptModal')">Cancel</button>
@@ -135,17 +127,17 @@
 
 {% block scripts %}
 <script>
-function openModal(id) {
-    document.getElementById(id).classList.add('active');
-}
-function closeModal(id) {
-    document.getElementById(id).classList.remove('active');
-}
-// Close on outside click
-window.onclick = function(event) {
-    if (event.target.classList.contains('modal-overlay')) {
-        event.target.classList.remove('active');
+    function openModal(id) {
+        document.getElementById(id).classList.add('active');
     }
-}
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+    // Close on outside click
+    window.onclick = function (event) {
+        if (event.target.classList.contains('modal-overlay')) {
+            event.target.classList.remove('active');
+        }
+    }
 </script>
 {% endblock %}
