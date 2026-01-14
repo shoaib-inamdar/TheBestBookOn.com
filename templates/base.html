@@ -17,8 +17,13 @@
             <img src="/static/logo.png" alt="Logo" style="height: 40px; width: auto;">
             TheBestBookOn.com
         </a>
-        <div class="user-badge">
-            Logged in as: <strong>{{ user }}</strong>
+        <div class="user-badge" style="display: flex; gap: 15px; align-items: center;">
+            {% if user %}
+            <span>Hello, <strong>{{ user }}</strong></span>
+            <a href="/logout" class="btn btn-outline" style="padding: 5px 10px; font-size: 0.8rem;">Logout</a>
+            {% else %}
+            <a href="/login" class="btn btn-primary" style="padding: 5px 15px;">Login</a>
+            {% endif %}
         </div>
     </header>
 

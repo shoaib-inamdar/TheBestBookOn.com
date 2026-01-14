@@ -1,7 +1,9 @@
 import requests
 import time
+import os
+import shutil
 from sqlalchemy.orm import Session
-from main import SessionLocal, Prompt, Submission, Vote, Tag, Favorite
+# from main import SessionLocal, Prompt, Submission, Vote, Tag, Favorite - Moved inside populate()
 
 USER_ORACLE = "the_oracle"
 
@@ -321,14 +323,14 @@ DATA = [
 def get_openlibrary_data(query):
     """
     Search OpenLibrary for the best match.
-    Returns dict with edition_key, title, cover_id or None.
+    Returns dict with edition_key, title, cover_id, ebook_access.
     """
     try:
         url = "https://openlibrary.org/search.json"
         params = {
             "q": query,
-            "fields": "key,title,author_name,cover_i,first_publish_year,edition_key",
-            "limit": 1
+            "fields": "key,title,author_name,cover_i,first_publish_year,edition_key,ebook_access",
+            "limit": 5 # Fetch more to find a borrowable one
         }
         resp = requests.get(url, params=params)
         data = resp.json()
@@ -337,25 +339,30 @@ def get_openlibrary_data(query):
             print(f"No results for: {query}")
             return None
         
-        doc = data["docs"][0]
+        # Prioritize borrowable
+        docs = data["docs"]
+        def priority_score(doc):
+            access = doc.get('ebook_access', 'no_ebook')
+            if access in ['borrowable', 'public', 'printdisabled']:
+                return 1
+            return 0
+        docs.sort(key=priority_score, reverse=True)
+        
+        doc = docs[0]
         
         # We need a valid edition key. 'edition_key' is a list.
         edition_keys = doc.get("edition_key", [])
         if not edition_keys:
-            # Fallback: key might be work key /works/OL..., we can try to find an edition
-            # but for simplicity, let's skip if no edition key.
             print(f"No edition key for: {query}")
             return None
             
-        # Pick the first edition key (usually the most popular/recent?)
-        # Or maybe the one with a cover?
-        # Let's just take the first one for now.
         edition_key = edition_keys[0]
         
         return {
             "edition_key": edition_key,
             "title": doc.get("title"),
-            "cover_id": doc.get("cover_i")
+            "cover_id": doc.get("cover_i"),
+            "ebook_access": doc.get("ebook_access")
         }
         
     except Exception as e:
@@ -363,6 +370,15 @@ def get_openlibrary_data(query):
         return None
 
 def populate():
+    if os.path.exists("thebestbookon_seed.db"):
+        print("Seed file found. Restoring from 'thebestbookon_seed.db'...")
+        shutil.copy("thebestbookon_seed.db", "thebestbookon.db")
+        print("Database restored.")
+        return
+
+    print("Seed file not found. Starting fresh population from OpenLibrary...")
+    from main import SessionLocal, Prompt, Submission, Vote, Tag, Favorite
+
     db = SessionLocal()
     
     print("Starting data population...")
@@ -398,7 +414,7 @@ def populate():
             # Check for existing submission
             existing_sub = db.query(Submission).filter(
                 Submission.prompt_id == prompt.id,
-                Submission.openlibrary_edition_key == ol_data['edition_key']
+                Submission.title == ol_data['title'] # Loose check
             ).first()
             
             if existing_sub:
@@ -411,6 +427,7 @@ def populate():
                 openlibrary_edition_key=ol_data['edition_key'],
                 title=ol_data['title'],
                 cover_id=ol_data['cover_id'],
+                ebook_access=ol_data['ebook_access'],
                 submitter_username=USER_ORACLE
             )
             db.add(submission)
