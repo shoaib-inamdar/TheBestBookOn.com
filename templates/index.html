@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="text-align: center; margin-bottom: 50px;">
+    <h1>What are the books<br>that explain the world?</h1>
+    <p class="lead" style="margin: 0 auto 30px auto;">
+        Join the search for the definitive books on every topic.
+        Vote for the best books, or start a new collection.
+    </p>
+    <button class="btn btn-primary" onclick="openModal('createPromptModal')">Start a Prompt</button>
+</div>
+
+<div class="prompts-list">
+    {% for prompt in prompts %}
+    <div class="card">
+        <a href="/prompts/{{ prompt.id }}">
+            <h2 style="font-size: 1.5rem; margin-bottom: 10px;">The Best Book On {{ prompt.title }}</h2>
+        </a>
+        <p style="color: #666; margin-bottom: 15px;">{{ prompt.description }}</p>
+
+        <!-- Book Preview Row -->
+        {% if prompt.top_books %}
+        <div style="display: flex; gap: 15px; margin: 20px 0; overflow-x: auto; padding-bottom: 10px;">
+            {% for book in prompt.top_books %}
+            <div style="position: relative; width: 80px; flex-shrink: 0;">
+                {% if loop.index == 1 %}<div class="rank-badge gold">#1</div>{% endif %}
+                {% if loop.index == 2 %}<div class="rank-badge silver">#2</div>{% endif %}
+                {% if loop.index == 3 %}<div class="rank-badge bronze">#3</div>{% endif %}
+
+                {% if book.cover_id %}
+                <img src="https://covers.openlibrary.org/b/id/{{ book.cover_id }}-M.jpg"
+                    style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"
+                    title="{{ book.title }}">
+                {% else %}
+                <div
+                    style="width: 100%; height: 120px; background: #eee; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; text-align: center; color: #999;">
+                    No Cover
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="prompt-meta"
+            style="font-size: 0.9rem; color: #888; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f0f0f0; padding-top: 15px; margin-top: 10px;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <img src="https://ui-avatars.com/api/?name={{ prompt.creator_username }}&background=random&size=24&rounded=true"
+                    style="vertical-align: middle;">
+                <span>By <strong>{{ prompt.creator_username }}</strong></span>
+                <span style="margin: 0 5px;">•</span>
+                <div class="prompt-tags" style="margin: 0; display: inline;">
+                    {% if prompt.tag1 %}<span class="tag">{{ prompt.tag1 }}</span>{% endif %}
+                    {% if prompt.tag2 %}<span class="tag">{{ prompt.tag2 }}</span>{% endif %}
+                    {% if prompt.tag3 %}<span class="tag">{{ prompt.tag3 }}</span>{% endif %}
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px;">
+                <span title="Total Books">📚 {{ prompt.total_books }}</span>
+                <span title="Total Voters">👥 {{ prompt.total_voters }}</span>
+                <span title="Total Votes">🗳️ {{ prompt.total_votes }}</span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Create Prompt Modal -->
+<div id="createPromptModal" class="modal-overlay">
+    <div class="modal">
+        <h2 style="margin-bottom: 20px;">Start a New Prompt</h2>
+        <form action="/prompts" method="post">
+            <div class="form-group">
+                <label>The Best Book On...</label>
+                <input type="text" name="title" placeholder="e.g. Antigravity, Coffee, The Roman Empire" required>
+            </div>
+            <div class="form-group">
+                <label>Description (Context)</label>
+                <textarea name="description" rows="3" placeholder="What kind of books are you looking for?"
+                    required></textarea>
+            </div>
+            <div class="form-group">
+                <label>Tags (Optional)</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" name="tag1" placeholder="Tag 1">
+                    <input type="text" name="tag2" placeholder="Tag 2">
+                    <input type="text" name="tag3" placeholder="Tag 3">
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('createPromptModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Prompt</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .rank-badge {
+        position: absolute;
+        bottom: -5px;
+        right: -5px;
+        background: #333;
+        color: white;
+        font-size: 0.75rem;
+        font-weight: bold;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        z-index: 2;
+    }
+
+    .rank-badge.gold {
+        background: #FFD700;
+        color: #333;
+    }
+
+    .rank-badge.silver {
+        background: #C0C0C0;
+        color: #333;
+    }
+
+    .rank-badge.bronze {
+        background: #CD7F32;
+        color: #333;
+    }
+</style>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openModal(id) {
+    document.getElementById(id).classList.add('active');
+}
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+}
+// Close on outside click
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal-overlay')) {
+        event.target.classList.remove('active');
+    }
+}
+</script>
+{% endblock %}

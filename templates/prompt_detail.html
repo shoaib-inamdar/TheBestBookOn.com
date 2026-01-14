@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}The Best Book On {{ prompt.title }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 30px;">
+    <a href="/" style="color: #666; font-size: 0.9rem;">&larr; Back to all prompts</a>
+</div>
+
+<div style="background: white; padding: 40px; border-radius: 12px; margin-bottom: 40px; box-shadow: var(--shadow-sm);">
+    <h1 style="margin-bottom: 10px;">The Best Book On <span style="color: var(--primary-color);">{{ prompt.title
+            }}</span></h1>
+    <p class="lead" style="margin-bottom: 20px;">{{ prompt.description }}</p>
+
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="prompt-tags">
+            {% if prompt.tag1 %}<span class="tag">{{ prompt.tag1 }}</span>{% endif %}
+            {% if prompt.tag2 %}<span class="tag">{{ prompt.tag2 }}</span>{% endif %}
+            {% if prompt.tag3 %}<span class="tag">{{ prompt.tag3 }}</span>{% endif %}
+        </div>
+        <button class="btn btn-primary" onclick="openModal('submitBookModal')">Nominate a Book</button>
+    </div>
+</div>
+
+<div class="submission-list">
+    {% for sub in submissions %}
+    <div class="submission-item">
+        <div class="vote-section">
+            <form action="/vote" method="POST">
+                <input type="hidden" name="submission_id" value="{{ sub.id }}">
+                <input type="hidden" name="value" value="1">
+                <button type="submit" class="vote-btn {% if sub.user_has_voted %}voted{% endif %}"
+                    title="Vote Up">▲</button>
+            </form>
+            <span class="vote-count">{{ sub.score }}</span>
+        </div>
+
+        {% if sub.cover_id %}
+        <img src="https://covers.openlibrary.org/b/id/{{ sub.cover_id }}-M.jpg" alt="Cover" class="book-cover">
+        {% else %}
+        <div class="book-cover"
+            style="display:flex;align-items:center;justify-content:center;color:#ccc;text-align:center;font-size:0.8rem;">
+            No Cover</div>
+        {% endif %}
+
+        <div class="book-details">
+            <a href="{{ sub.openlibrary_url }}" target="_blank" style="text-decoration: none; color: inherit;">
+                <div class="book-title">{{ sub.title }}</div>
+            </a>
+            <!-- Author usually needs another fetch or we store it. For now, we skip or store author? User "Kiss" didn't strict require author, but nice to have. 
+                 Since we moved to storing title/cover, we probably lost author unless we store it too. 
+                 Let's stay simple: Title + Cover is enough for "Wow" right now. -->
+
+            <p style="font-size: 0.9rem; margin-top: 10px;">
+                <em>Nominated by {{ sub.submitter_username }}</em>
+            </p>
+        </div>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 40px; color: #888;">
+        <p>No nominations yet. Be the first to tell us what the best book is!</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Submit Modal -->
+<div id="submitBookModal" class="modal-overlay">
+    <div class="modal">
+        <h2>Nominate a Book</h2>
+        <p style="margin-bottom: 15px; font-size: 0.9rem; color: #666;">Search OpenLibrary for the book you'd like to
+            recommend.</p>
+
+        <div class="form-group">
+            <input type="text" id="bookSearchInput" placeholder="Search by title or author..." autocomplete="off">
+            <div id="searchResults" class="search-results"></div>
+        </div>
+
+        <form action="/prompts/{{ prompt.id }}/submit" method="post" id="submitForm" style="display: none;">
+            <!-- Hidden fields to store data to backend -->
+            <input type="hidden" name="edition_key" id="selectedEditionKey">
+            <input type="hidden" name="title" id="selectedTitleInput">
+            <input type="hidden" name="cover_id" id="selectedCoverId">
+
+            <div
+                style="margin: 15px 0; padding: 10px; background: #f9f9f9; border-radius: 6px; display: flex; align-items: center; gap: 10px;">
+                <img id="selectedCover" src="" style="width: 40px; height: 60px; object-fit: cover; display:none;">
+                <div style="font-weight: bold;" id="selectedTitleDisplay"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Why is this the best book on {{ prompt.title }}? (Optional)</label>
+                <textarea name="comment" rows="3"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-outline"
+                    onclick="closeModal('submitBookModal'); resetSearch();">Cancel</button>
+                <button type="submit" class="btn btn-primary">Submit Nomination</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Modal Logic
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal-overlay')) {
+        event.target.classList.remove('active');
+    }
+}
+
+function resetSearch() {
+    document.getElementById('bookSearchInput').value = '';
+    document.getElementById('searchResults').innerHTML = '';
+    document.getElementById('searchResults').classList.remove('active');
+    document.getElementById('submitForm').style.display = 'none';
+}
+
+// Search Logic for Nomination
+let debounceTimer;
+const searchInput = document.getElementById('bookSearchInput');
+const resultsDiv = document.getElementById('searchResults');
+
+searchInput.addEventListener('input', (e) => {
+    clearTimeout(debounceTimer);
+    const query = e.target.value;
+    if (query.length < 3) {
+        resultsDiv.classList.remove('active');
+        return;
+    }
+    
+    debounceTimer = setTimeout(async () => {
+        const res = await fetch(`/api/search_books?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        
+        resultsDiv.innerHTML = '';
+        if (data.docs) {
+            data.docs.forEach(doc => {
+                const div = document.createElement('div');
+                div.className = 'search-result-item';
+                div.innerHTML = `
+                    <img class="search-result-cover" src="${doc.cover_i ? 'https://covers.openlibrary.org/b/id/' + doc.cover_i + '-S.jpg' : ''}">
+                    <div>
+                        <div style="font-weight:bold">${doc.title}</div>
+                        <div style="font-size:0.8rem">${doc.author_name ? doc.author_name[0] : ''} (${doc.first_publish_year || ''})</div>
+                    </div>
+                `;
+                div.onclick = () => selectBook(doc);
+                resultsDiv.appendChild(div);
+            });
+            resultsDiv.classList.add('active');
+        }
+    }, 300);
+});
+
+function selectBook(doc) {
+    // PREFER EDITION KEY
+    // If edition_key array exists, take the first one. Else fall back to Work Key (split from key)
+    let key = '';
+    if (doc.edition_key && doc.edition_key.length > 0) {
+        key = doc.edition_key[0];
+    } else {
+        key = doc.key.split('/').pop(); // "OL123W" likely
+    }
+
+    document.getElementById('selectedEditionKey').value = key;
+    document.getElementById('selectedTitleInput').value = doc.title;
+    document.getElementById('selectedCoverId').value = doc.cover_i || '';
+    
+    document.getElementById('selectedTitleDisplay').innerText = doc.title;
+    
+    const coverImg = document.getElementById('selectedCover');
+    if(doc.cover_i) {
+        coverImg.src = `https://covers.openlibrary.org/b/id/${doc.cover_i}-S.jpg`;
+        coverImg.style.display = 'block';
+    } else {
+        coverImg.style.display = 'none';
+    }
+    
+    document.getElementById('submitForm').style.display = 'block';
+    resultsDiv.classList.remove('active');
+}
+</script>
+{% endblock %}
