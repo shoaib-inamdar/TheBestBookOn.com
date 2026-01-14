@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, UniqueConstraint, Boolean, Text
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, UniqueConstraint, Boolean, Text, Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 import httpx
@@ -19,6 +19,17 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+
+# Association Table for Many-to-Many
+submission_tags = Table('submission_tags', Base.metadata,
+    Column('submission_id', Integer, ForeignKey('submissions.id')),
+    Column('tag_id', Integer, ForeignKey('tags.id'))
+)
+
+class Tag(Base):
+    __tablename__ = "tags"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)
 
 class Prompt(Base):
     __tablename__ = "prompts"
@@ -39,14 +50,12 @@ class Submission(Base):
     # Cached metadata to avoid API hammer
     title = Column(String)
     cover_id = Column(Integer, nullable=True)
-    # Tags on submission now
-    tag1 = Column(String, nullable=True)
-    tag2 = Column(String, nullable=True)
-    tag3 = Column(String, nullable=True) 
+    
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     prompt = relationship("Prompt", back_populates="submissions")
     votes = relationship("Vote", back_populates="submission")
+    tags = relationship("Tag", secondary=submission_tags, backref="submissions")
     
     # helper to check total score
     @property
@@ -123,9 +132,8 @@ def read_root(request: Request, db: Session = Depends(get_db), user: str = Depen
             for v in s.votes:
                 voter_ids.add(v.voter_username)
             # Aggregate tags
-            for t in [s.tag1, s.tag2, s.tag3]:
-                if t:
-                    tag_counts[t] = tag_counts.get(t, 0) + 1
+            for t in s.tags:
+                tag_counts[t.name] = tag_counts.get(t.name, 0) + 1
                     
         total_voters = len(voter_ids)
         
@@ -161,9 +169,8 @@ def read_prompt(prompt_id: int, request: Request, db: Session = Depends(get_db),
     tag_counts = {}
     for sub in submissions:
         sub.user_has_voted = any(v.voter_username == user for v in sub.votes)
-        for t in [sub.tag1, sub.tag2, sub.tag3]:
-            if t:
-                tag_counts[t] = tag_counts.get(t, 0) + 1
+        for t in sub.tags:
+            tag_counts[t.name] = tag_counts.get(t.name, 0) + 1
     
     top_tags = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[:3]
     prompt.display_tags = [t[0] for t in top_tags]
@@ -208,9 +215,7 @@ def submit_book(
     edition_key: str = Form(...),
     title: str = Form(...),
     cover_id: int = Form(None),
-    tag1: str = Form(None),
-    tag2: str = Form(None),
-    tag3: str = Form(None),
+    tags: str = Form(""), # Comma separated
     comment: str = Form(None),
     db: Session = Depends(get_db),
     user: str = Depends(get_current_user)
@@ -228,12 +233,26 @@ def submit_book(
             openlibrary_edition_key=edition_key,
             title=title,
             cover_id=cover_id,
-            tag1=tag1, tag2=tag2, tag3=tag3,
             submitter_username=user
         )
         db.add(submission)
-        db.commit()
-        db.refresh(submission)
+    
+    # Process Tags
+    if tags:
+        tag_names = [t.strip() for t in tags.split(',') if t.strip()]
+        for t_name in tag_names:
+            # Check if tag exists
+            tag_obj = db.query(Tag).filter(Tag.name == t_name).first()
+            if not tag_obj:
+                tag_obj = Tag(name=t_name)
+                db.add(tag_obj)
+                db.commit() # Commit to get ID
+                
+            if tag_obj not in submission.tags:
+                submission.tags.append(tag_obj)
+    
+    db.commit()
+    db.refresh(submission)
     
     # Auto-vote for the submission
     existing_vote = db.query(Vote).filter(
@@ -252,6 +271,13 @@ def submit_book(
         db.commit()
         
     return RedirectResponse(url=f"/prompts/{prompt_id}", status_code=303)
+
+@app.get("/api/tags")
+def search_tags(q: str = "", db: Session = Depends(get_db)):
+    if not q:
+        return []
+    tags = db.query(Tag).filter(Tag.name.contains(q)).limit(10).all()
+    return [t.name for t in tags]
 
 @app.post("/vote")
 def vote_submission(

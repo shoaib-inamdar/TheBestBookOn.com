@@ -1,6 +1,9 @@
 INFO:     Will watch for changes in these directories: ['/Users/internetarchive/Projects/TheBestBookOn.com']
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [66333] using StatReload
-INFO:     Started server process [66348]
+INFO:     Started reloader process [66814] using StatReload
+INFO:     Started server process [66829]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
+INFO:     127.0.0.1:50154 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50154 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50154 - "GET /static/style.css HTTP/1.1" 200 OK
