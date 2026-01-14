@@ -83,6 +83,19 @@ class Vote(Base):
         UniqueConstraint('voter_username', 'submission_id', name='unique_user_vote_per_submission'),
     )
 
+class Favorite(Base):
+    __tablename__ = "favorites"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, index=True)
+    prompt_id = Column(Integer, ForeignKey("prompts.id"))
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    prompt = relationship("Prompt", back_populates="favorites")
+
+    __table_args__ = (
+        UniqueConstraint('username', 'prompt_id', name='unique_user_favorite_prompt'),
+    )
+
 Base.metadata.create_all(bind=engine)
 
 # --- App Setup ---
