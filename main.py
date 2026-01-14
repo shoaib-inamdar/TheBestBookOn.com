@@ -40,6 +40,7 @@ class Prompt(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     submissions = relationship("Submission", back_populates="prompt")
+    favorites = relationship("Favorite", back_populates="prompt")
 
 class Submission(Base):
     __tablename__ = "submissions"
@@ -115,6 +116,12 @@ def get_current_user(request: Request):
 def read_root(request: Request, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
     prompts = db.query(Prompt).order_by(Prompt.created_at.desc()).all()
     
+    # Get user favorites
+    user_fav_ids = set()
+    if user:
+        favs = db.query(Favorite).filter(Favorite.username == user).all()
+        user_fav_ids = {f.prompt_id for f in favs}
+    
     # Enrich prompts with stats
     prompts_data = []
     for p in prompts:
@@ -150,7 +157,8 @@ def read_root(request: Request, db: Session = Depends(get_db), user: str = Depen
             "top_books": top_3,
             "total_books": len(subs),
             "total_votes": total_votes,
-            "total_voters": total_voters
+            "total_voters": total_voters,
+            "is_favorited": p.id in user_fav_ids
         })
         
     return templates.TemplateResponse("index.html", {"request": request, "prompts": prompts_data, "user": user})
@@ -309,4 +317,26 @@ def vote_submission(
     db.commit()
     # Redirect back to the prompt page? We need the prompt id.
     return RedirectResponse(url=f"/prompts/{submission.prompt_id}", status_code=303)
+
+@app.post("/api/prompts/{prompt_id}/toggle_favorite")
+def toggle_favorite(
+    prompt_id: int,
+    db: Session = Depends(get_db),
+    user: str = Depends(get_current_user)
+):
+    existing = db.query(Favorite).filter(
+        Favorite.prompt_id == prompt_id,
+        Favorite.username == user
+    ).first()
+    
+    if existing:
+        db.delete(existing)
+        favorited = False
+    else:
+        fav = Favorite(prompt_id=prompt_id, username=user)
+        db.add(fav)
+        favorited = True
+    
+    db.commit()
+    return {"favorited": favorited}
 
