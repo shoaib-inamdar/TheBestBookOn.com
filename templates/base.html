@@ -18,6 +18,14 @@
             <img src="/static/logo.png" alt="Logo" style="height: 40px; width: auto;">
             TheBestBookOn.com
         </a>
+
+        <div style="flex-grow: 1; margin: 0 40px;">
+            <form action="/" method="get">
+                <input type="text" name="q" placeholder="Search prompts by tag..."
+                    value="{{ request.query_params.get('q', '') }}"
+                    style="width: 100%; padding: 8px 15px; border-radius: 20px; border: 1px solid #ddd; background: #f9f9f9; font-size: 0.9rem;">
+            </form>
+        </div>
         <div style="display: flex; gap: 15px; align-items: center;">
             {% if user %}
             <span>Hello, <strong>{{ user }}</strong></span>
