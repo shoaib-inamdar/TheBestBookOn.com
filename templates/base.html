@@ -113,6 +113,40 @@
                 console.error("Failed to toggle favorite", err);
             }
         }
+
+        async function deletePrompt(event, promptId) {
+            event.stopPropagation();
+            event.preventDefault();
+            if (!confirm("Are you sure you want to delete this prompt?")) return;
+
+            try {
+                const res = await fetch(`/api/prompts/${promptId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    window.location.reload();
+                } else {
+                    alert("Failed to delete prompt");
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function deleteSubmission(event, subId) {
+            event.stopPropagation();
+            event.preventDefault();
+            if (!confirm("Are you sure you want to delete this nomination?")) return;
+
+            try {
+                const res = await fetch(`/api/submissions/${subId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    window.location.reload();
+                } else {
+                    alert("Failed to delete nomination");
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
     </script>
     {% block scripts %}{% endblock %}
 </body>

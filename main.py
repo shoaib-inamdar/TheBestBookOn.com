@@ -478,6 +478,34 @@ def toggle_favorite(
     db.commit()
     return {"favorited": favorited}
 
+# Admin Endpoints
+@app.delete("/api/prompts/{prompt_id}")
+def delete_prompt(prompt_id: int, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
+    if user != "mekBot":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    prompt = db.query(Prompt).filter(Prompt.id == prompt_id).first()
+    if not prompt:
+        raise HTTPException(status_code=404, detail="Prompt not found")
+        
+    db.delete(prompt) # Cascade delete should handle children if configured, otherwise might need manual
+    # For now assuming SQLite cascade or simple delete
+    db.commit()
+    return {"success": True}
+
+@app.delete("/api/submissions/{submission_id}")
+def delete_submission(submission_id: int, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
+    if user != "mekBot":
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    sub = db.query(Submission).filter(Submission.id == submission_id).first()
+    if not sub:
+        raise HTTPException(status_code=404, detail="Submission not found")
+        
+    db.delete(sub)
+    db.commit()
+    return {"success": True}
+
 @app.get("/users/{username}", response_class=HTMLResponse)
 def user_profile(username: str, request: Request, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
     # 1. Get Prompts created by user

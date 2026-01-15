@@ -81,6 +81,10 @@
                 <em>Nominated by <a href="/users/{{ sub.submitter_username }}"
                         style="color: #d9534f; text-decoration: none;">{{ sub.submitter_username }}</a> on {{
                     sub.created_at.strftime('%Y-%m-%d') }}</em>
+                {% if user == 'mekBot' %}
+                <button onclick="deleteSubmission(event, {{ sub.id }})"
+                    style="border: none; background: none; color: #d9534f; font-weight: bold; cursor: pointer; margin-left: 10px;">[Delete]</button>
+                {% endif %}
             </p>
         </div>
     </div>
