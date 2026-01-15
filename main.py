@@ -420,7 +420,12 @@ def vote_submission(
     ).first()
     
     if existing_vote:
-        existing_vote.value = value
+        if existing_vote.value == value:
+            # Toggle off (undo vote)
+            db.delete(existing_vote)
+        else:
+            # Change vote
+            existing_vote.value = value
     else:
         new_vote = Vote(
             submission_id=submission_id,
