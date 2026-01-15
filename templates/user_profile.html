@@ -111,8 +111,10 @@
                         {% endfor %}
                     </div>
                 </div>
-                <div>
-                    {{ prompt.submissions|length }} books • {{ prompt.created_at.strftime('%Y-%m-%d') }}
+                <div style="display: flex; gap: 15px;">
+                    <span title="Total Books">📚 {{ prompt.total_books }}</span>
+                    <span title="Total Voters">👥 {{ prompt.total_voters }}</span>
+                    <span title="Total Votes">🗳️ {{ prompt.total_votes }}</span>
                 </div>
             </div>
         </div>

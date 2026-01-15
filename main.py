@@ -491,6 +491,16 @@ def user_profile(username: str, request: Request, db: Session = Depends(get_db),
         from collections import Counter
         tag_counts = Counter(all_tags)
         p.display_tags = [t for t, _ in tag_counts.most_common(5)]
+        
+        # Calculate stats for display
+        p.total_books = len(subs)
+        p.total_votes = sum(s.score for s in subs)
+        
+        voter_set = set()
+        for s in subs:
+            for v in s.votes:
+                voter_set.add(v.voter_username)
+        p.total_voters = len(voter_set)
     
     # 2. Get Submissions by user
     # We need to join with Prompt eagerly to display prompt title
