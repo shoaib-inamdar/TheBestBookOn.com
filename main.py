@@ -406,6 +406,9 @@ def vote_submission(
     db: Session = Depends(get_db),
     user: str = Depends(get_current_user)
 ):
+    if not user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+        
     # upsert vote
     submission = db.query(Submission).filter(Submission.id == submission_id).first()
     if not submission:
