@@ -18,7 +18,11 @@
             <span class="tag">{{ tag }}</span>
             {% endfor %}
         </div>
+        {% if user %}
         <button class="btn btn-primary" onclick="openModal('submitBookModal')">Nominate a Book</button>
+        {% else %}
+        <a href="/login" class="btn btn-primary">Login to Nominate</a>
+        {% endif %}
     </div>
 </div>
 
