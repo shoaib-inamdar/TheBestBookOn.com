@@ -517,6 +517,25 @@ def get_prompt_voters(prompt_id: int, skip: int = 0, limit: int = 10, db: Sessio
         "has_more": has_more
     }
 
+@app.get("/api/submissions/{submission_id}/voters")
+def get_submission_voters(submission_id: int, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    # Get all votes for this submission
+    votes_query = db.query(Vote).filter(Vote.submission_id == submission_id).order_by(Vote.timestamp.desc())
+    
+    votes = votes_query.offset(skip).limit(limit + 1).all()
+    
+    has_more = len(votes) > limit
+    results = votes[:limit]
+    
+    return {
+        "voters": [{
+            "username": v.voter_username, 
+            "value": v.value, # 1 or -1
+            "timestamp": v.timestamp
+        } for v in results],
+        "has_more": has_more
+    }
+
 # Admin Endpoints
 @app.delete("/api/prompts/{prompt_id}")
 def delete_prompt(prompt_id: int, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
