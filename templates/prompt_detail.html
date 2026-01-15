@@ -44,15 +44,30 @@
         {% endif %}
 
         <div class="book-details">
-            <a href="{{ sub.openlibrary_url }}" target="_blank" style="text-decoration: none; color: inherit;">
-                <div class="book-title">{{ sub.title }}</div>
-            </a>
-            <!-- Author usually needs another fetch or we store it. For now, we skip or store author? User "Kiss" didn't strict require author, but nice to have. 
-                 Since we moved to storing title/cover, we probably lost author unless we store it too. 
-                 Let's stay simple: Title + Cover is enough for "Wow" right now. -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <a href="{{ sub.openlibrary_url }}" target="_blank" style="text-decoration: none; color: inherit;">
+                        <div class="book-title">{{ sub.title }}</div>
+                    </a>
+                    <div class="prompt-tags" style="margin-top: 5px; margin-bottom: 10px;">
+                        {% for tag in sub.tags %}
+                        <span class="tag">{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
 
-            <p style="font-size: 0.9rem; margin-top: 10px;">
-                <em>Nominated by {{ sub.submitter_username }}</em>
+                {% if sub.ebook_access in ['borrowable', 'public', 'printdisabled'] %}
+                <a href="{{ sub.openlibrary_url }}" target="_blank" class="btn btn-primary"
+                    style="font-size: 0.9rem; padding: 5px 15px; background-color: #007bff;">Read Book</a>
+                {% endif %}
+            </div>
+
+            {% if sub.comment %}
+            <p style="margin-bottom: 10px; color: #444;">{{ sub.comment }}</p>
+            {% endif %}
+
+            <p style="font-size: 0.8rem; margin-top: 10px; color: #888;">
+                <em>Nominated by {{ sub.submitter_username }} on {{ sub.created_at.strftime('%Y-%m-%d') }}</em>
             </p>
         </div>
     </div>

@@ -265,6 +265,12 @@ def read_prompt(prompt_id: int, request: Request, db: Session = Depends(get_db),
     tag_counts = {}
     for sub in submissions:
         sub.user_has_voted = any(v.voter_username == user for v in sub.votes)
+        
+        # Get the original vote comment (from the submitter)
+        # We assume the submitter always votes 1 on creation, so find their vote
+        submitter_vote = next((v for v in sub.votes if v.voter_username == sub.submitter_username), None)
+        sub.comment = submitter_vote.comment if submitter_vote else None
+        
         for t in sub.tags:
             tag_counts[t.name] = tag_counts.get(t.name, 0) + 1
     
