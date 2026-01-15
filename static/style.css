@@ -1,14 +1,16 @@
 /* Internet Archive / Premium Book Style */
 :root {
-    --bg-color: #fdfaf6; /* Warm paper-like background */
+    --bg-color: #fdfaf6;
+    /* Warm paper-like background */
     --text-color: #2c2929;
-    --primary-color: #d72b2b; /* A nice "book cover" red/orange */
+    --primary-color: #d72b2b;
+    /* A nice "book cover" red/orange */
     --secondary-color: #3b3b3b;
     --accent-color: #e0dcd3;
     --card-bg: #ffffff;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 6px rgba(0,0,0,0.05);
-    --shadow-lg: 0 10px 15px rgba(0,0,0,0.05);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.05);
     --font-serif: 'Georgia', 'Times New Roman', serif;
     --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
@@ -27,7 +29,11 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4, .serif {
+h1,
+h2,
+h3,
+h4,
+.serif {
     font-family: var(--font-serif);
     font-weight: 700;
 }
@@ -106,6 +112,7 @@ p.lead {
 .btn-primary:hover {
     opacity: 0.9;
     transform: translateY(-1px);
+    color: white;
 }
 
 .btn-outline {
@@ -129,7 +136,8 @@ label {
     font-size: 0.9rem;
 }
 
-input[type="text"], textarea {
+input[type="text"],
+textarea {
     width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
@@ -139,7 +147,8 @@ input[type="text"], textarea {
     background: var(--card-bg);
 }
 
-input:focus, textarea:focus {
+input:focus,
+textarea:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 2px rgba(215, 43, 43, 0.1);
@@ -152,7 +161,7 @@ input:focus, textarea:focus {
     border-radius: 12px;
     box-shadow: var(--shadow-sm);
     margin-bottom: 20px;
-    border: 1px solid rgba(0,0,0,0.03);
+    border: 1px solid rgba(0, 0, 0, 0.03);
     transition: box-shadow 0.2s;
 }
 
@@ -252,8 +261,11 @@ input:focus, textarea:focus {
 /* Modal */
 .modal-overlay {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.5);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -287,7 +299,10 @@ input:focus, textarea:focus {
     border-radius: 6px;
     display: none;
 }
-.search-results.active { display: block; }
+
+.search-results.active {
+    display: block;
+}
 
 .search-result-item {
     padding: 10px;
@@ -296,9 +311,11 @@ input:focus, textarea:focus {
     display: flex;
     gap: 10px;
 }
+
 .search-result-item:hover {
     background: #f9f9f9;
 }
+
 .search-result-cover {
     width: 30px;
     height: 45px;
