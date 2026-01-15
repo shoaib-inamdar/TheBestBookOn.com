@@ -17,10 +17,12 @@
 </div>
 
 <div class="tabs" style="display: flex; gap: 20px; border-bottom: 1px solid #eee; margin-bottom: 30px;">
-    <button class="tab-btn active" onclick="switchTab(event, 'votes')">Votes ({{ votes|length }})</button>
-    <button class="tab-btn" onclick="switchTab(event, 'prompts')">Prompts ({{ prompts|length }})</button>
-    <button class="tab-btn" onclick="switchTab(event, 'nominations')">Nominations ({{ submissions|length }})</button>
-    <button class="tab-btn" onclick="switchTab(event, 'favorites')">Favorites ({{ favorite_prompts|length }})</button>
+    <button class="tab-btn active" id="btn-votes" onclick="switchTab('votes')">Votes ({{ votes|length }})</button>
+    <button class="tab-btn" id="btn-prompts" onclick="switchTab('prompts')">Prompts ({{ prompts|length }})</button>
+    <button class="tab-btn" id="btn-nominations" onclick="switchTab('nominations')">Nominations ({{ submissions|length
+        }})</button>
+    <button class="tab-btn" id="btn-favorites" onclick="switchTab('favorites')">Favorites ({{ favorite_prompts|length
+        }})</button>
 </div>
 
 <!-- Votes Tab (Default Active) -->
@@ -136,38 +138,77 @@
     {% if submissions %}
     <div class="submission-list" style="margin-top: 0;">
         {% for sub in submissions %}
-        <div class="card" style="margin-bottom: 20px; padding: 20px; display: flex; gap: 20px;">
-            {% if sub.cover_id %}
-            <img src="https://covers.openlibrary.org/b/id/{{ sub.cover_id }}-M.jpg"
-                style="width: 60px; height: 90px; object-fit: cover; border-radius: 4px; box-shadow: var(--shadow-sm);">
-            {% else %}
-            <div
-                style="width: 60px; height: 90px; background: #eee; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #999;">
-                No Cover</div>
-            {% endif %}
-
-            <div style="flex-grow: 1;">
-                <div style="font-size: 0.9rem; color: #666; margin-bottom: 5px;">
-                    Nominated for <a href="/prompts/{{ sub.prompt.id }}" style="font-weight: bold;">The Best Book On {{
-                        sub.prompt.title }}</a>
-                </div>
-                <h3 style="margin-bottom: 5px; font-size: 1.2rem;">{{ sub.title }}</h3>
-
-                {% if sub.comment %}
-                <p style="color: #444; font-size: 0.95rem; margin-top: 5px; font-style: italic;">"{{ sub.comment }}"</p>
+        <div class="submission-item" id="book-{{ sub.id }}"
+            style="background: white; padding: 20px; border-radius: 8px; box-shadow: var(--shadow-sm); border: none;">
+            <div class="vote-section">
+                {% if user %}
+                <form action="/vote" method="post">
+                    <input type="hidden" name="submission_id" value="{{ sub.id }}">
+                    <input type="hidden" name="value" value="1">
+                    <input type="hidden" name="next_url" value="/users/{{ profile_user }}#nominations">
+                    <button type="submit" class="vote-btn {% if sub.user_vote_value == 1 %}voted{% endif %}"
+                        title="Upvote">▲</button>
+                </form>
+                {% else %}
+                <button class="vote-btn" disabled style="cursor: not-allowed; opacity: 0.3;">▲</button>
                 {% endif %}
 
-                <div class="prompt-tags" style="margin-top: 10px; margin-bottom: 5px;">
-                    {% for tag in sub.tags %}
-                    <a href="/?q={{ tag.name }}" class="tag" style="text-decoration: none; color: inherit;">{{ tag.name
-                        }}</a>
-                    {% endfor %}
+                <div class="vote-count"
+                    style="cursor: pointer; color: #444; padding: 2px 5px; border-radius: 4px; transition: background 0.2s;"
+                    onclick="openSubmissionVoters({{ sub.id }})" title="View Voters">{{ sub.score }}</div>
+
+                {% if user %}
+                <form action="/vote" method="post">
+                    <input type="hidden" name="submission_id" value="{{ sub.id }}">
+                    <input type="hidden" name="value" value="-1">
+                    <input type="hidden" name="next_url" value="/users/{{ profile_user }}#nominations">
+                    <button type="submit" class="vote-btn {% if sub.user_vote_value == -1 %}voted{% endif %}"
+                        title="Downvote">▼</button>
+                </form>
+                {% else %}
+                <button class="vote-btn" disabled style="cursor: not-allowed; opacity: 0.3;">▼</button>
+                {% endif %}
+            </div>
+
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                {% if sub.cover_id %}
+                <img src="https://covers.openlibrary.org/b/id/{{ sub.cover_id }}-M.jpg" alt="Cover" class="book-cover">
+                {% else %}
+                <div class="book-cover"
+                    style="display:flex;align-items:center;justify-content:center;color:#ccc;text-align:center;font-size:0.8rem;">
+                    No Cover</div>
+                {% endif %}
+            </div>
+
+            <div class="book-details">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <div style="font-size: 0.9rem; color: #666; margin-bottom: 5px;">
+                            Nominated for <a href="/prompts/{{ sub.prompt.id }}" style="font-weight: bold;">The Best
+                                Book
+                                On {{
+                                sub.prompt.title }}</a>
+                        </div>
+                        <a href="{{ sub.openlibrary_url }}" target="_blank"
+                            style="text-decoration: none; color: inherit;">
+                            <div class="book-title">{{ sub.title }}</div>
+                        </a>
+                        <div class="prompt-tags" style="margin-top: 5px; margin-bottom: 10px;">
+                            {% for tag in sub.tags %}
+                            <a href="/?q={{ tag.name }}" class="tag" style="text-decoration: none; color: inherit;">{{
+                                tag.name }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
-                <div style="margin-top: 10px; font-size: 0.85rem; color: #888;">
-                    <span>{{ sub.score }} Upvotes</span>
-                    <span style="margin: 0 10px;">•</span>
-                    <span>{{ sub.created_at.strftime('%Y-%m-%d') }}</span>
-                </div>
+
+                {% if sub.comment %}
+                <p style="margin-bottom: 10px; color: #444;">{{ sub.comment }}</p>
+                {% endif %}
+
+                <p style="font-size: 0.8rem; margin-top: 10px; color: #888;">
+                    <em>Nominated on {{ sub.created_at.strftime('%Y-%m-%d') }}</em>
+                </p>
             </div>
         </div>
         {% endfor %}
@@ -274,16 +315,97 @@
 </style>
 
 <script>
-    function switchTab(event, tabId) {
+    function switchTab(tabId) {
         // Hide all tab contents
         document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
         // Deactivate all buttons
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
 
         // Show target tab
-        document.getElementById(tabId).style.display = 'block';
-        // Activate button
-        event.target.classList.add('active');
+        const targetTab = document.getElementById(tabId);
+        if (targetTab) {
+            targetTab.style.display = 'block';
+            // Activate button
+            const btn = document.getElementById('btn-' + tabId);
+            if (btn) btn.classList.add('active');
+            // Update URL hash without jumping
+            history.replaceState(null, null, '#' + tabId);
+        }
+    }
+
+    // On page load, check for hash
+    window.addEventListener('load', () => {
+        const hash = window.location.hash.replace('#', '');
+        if (hash && document.getElementById(hash)) {
+            switchTab(hash);
+        }
+    });
+
+    let currentSubId = null;
+    let currentSkip = 0;
+    const LIMIT = 10;
+
+    function openSubmissionVoters(subId) {
+        currentSubId = subId;
+        currentSkip = 0;
+        document.getElementById('votersList').innerHTML = ''; // Clear previous
+        document.getElementById('votersModal').classList.add('active');
+        loadVoters();
+    }
+
+    function closeVotersModal() {
+        document.getElementById('votersModal').classList.remove('active');
+    }
+
+    async function loadVoters() {
+        const btn = document.getElementById('loadMoreVotersBtn');
+        btn.textContent = "Loading...";
+        try {
+            const res = await fetch(`/api/submissions/${currentSubId}/voters?skip=${currentSkip}&limit=${LIMIT}`);
+            const data = await res.json();
+
+            const list = document.getElementById('votersList');
+            data.voters.forEach(v => {
+                const div = document.createElement('div');
+                div.style.padding = '12px 10px';
+                div.style.borderBottom = '1px solid #f9f9f9';
+                div.style.display = 'flex';
+                div.style.alignItems = 'center';
+                div.style.justifyContent = 'space-between';
+
+                const icon = v.value > 0 ? '👍' : '👎';
+
+                div.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 1.2rem;">${icon}</span>
+                        <img src="https://ui-avatars.com/api/?name=${v.username}&background=random&size=32&rounded=true" style="vertical-align: middle;">
+                        <a href="/users/${v.username}" style="text-decoration: none; color: #d9534f; font-weight: 500;">${v.username}</a>
+                    </div>
+                    <button class="btn btn-sm btn-outline" disabled style="opacity: 0.5; cursor: not-allowed; font-size: 0.8rem; padding: 2px 8px;">Follow</button>
+                `;
+                list.appendChild(div);
+            });
+
+            currentSkip += data.voters.length;
+
+            if (data.has_more) {
+                btn.style.display = 'block';
+                btn.textContent = "Load More";
+                btn.onclick = loadVoters;
+            } else {
+                btn.style.display = 'none';
+            }
+
+        } catch (err) {
+            console.error(err);
+            btn.textContent = "Error loading";
+        }
+    }
+
+    window.onclick = function (event) {
+        if (event.target.classList.contains('modal-overlay')) {
+            event.target.classList.remove('active');
+        }
     }
 </script>
 {% endblock %}

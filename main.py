@@ -428,6 +428,7 @@ def search_tags(q: str = "", db: Session = Depends(get_db)):
 def vote_submission(
     submission_id: int = Form(...),
     value: int = Form(...), # 1 or -1
+    next_url: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     user: str = Depends(get_current_user)
 ):
@@ -460,6 +461,10 @@ def vote_submission(
         db.add(new_vote)
     
     db.commit()
+    
+    if next_url:
+        return RedirectResponse(url=next_url, status_code=303)
+        
     # Redirect back to the prompt page? We need the prompt id.
     return RedirectResponse(url=f"/prompts/{submission.prompt_id}", status_code=303)
 
@@ -625,6 +630,10 @@ def user_profile(username: str, request: Request, db: Session = Depends(get_db),
     for sub in user_submissions:
         submitter_vote = next((v for v in sub.votes if v.voter_username == username), None)
         sub.comment = submitter_vote.comment if submitter_vote else None
+        
+        # Determine logged-in user's vote value (1, -1, or 0)
+        user_vote = next((v for v in sub.votes if v.voter_username == user), None)
+        sub.user_vote_value = user_vote.value if user_vote else 0
         
     # 4. Get Votes by user
     user_votes = db.query(Vote).filter(Vote.voter_username == username)\
