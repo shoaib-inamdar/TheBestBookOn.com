@@ -112,7 +112,7 @@
                     <span style="margin: 0 5px;">•</span>
                     <div class="prompt-tags" style="margin: 0; display: inline;">
                         {% for tag in prompt.display_tags %}
-                        <span class="tag">{{ tag }}</span>
+                        <a href="/?q={{ tag }}" class="tag" style="text-decoration: none; color: #444;">{{ tag }}</a>
                         {% endfor %}
                     </div>
                 </div>
