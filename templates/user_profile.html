@@ -19,6 +19,7 @@
 <div class="tabs" style="display: flex; gap: 20px; border-bottom: 1px solid #eee; margin-bottom: 30px;">
     <button class="tab-btn active" onclick="switchTab(event, 'prompts')">Started Prompts ({{ prompts|length }})</button>
     <button class="tab-btn" onclick="switchTab(event, 'nominations')">Nominations ({{ submissions|length }})</button>
+    <button class="tab-btn" onclick="switchTab(event, 'votes')">Votes ({{ votes|length }})</button>
 </div>
 
 <!-- Prompts Tab -->
@@ -81,6 +82,43 @@
     </div>
     {% else %}
     <p style="color: #666; font-style: italic;">No nominations yet.</p>
+    {% endif %}
+</div>
+
+<!-- Votes Tab -->
+<div id="votes" class="tab-content" style="display: none;">
+    {% if votes %}
+    <div class="submission-list" style="margin-top: 0;">
+        {% for vote in votes %}
+        <div class="card" style="margin-bottom: 20px; padding: 20px; display: flex; gap: 20px;">
+            {% if vote.submission.cover_id %}
+            <img src="https://covers.openlibrary.org/b/id/{{ vote.submission.cover_id }}-M.jpg"
+                style="width: 60px; height: 90px; object-fit: cover; border-radius: 4px; box-shadow: var(--shadow-sm);">
+            {% else %}
+            <div
+                style="width: 60px; height: 90px; background: #eee; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #999;">
+                No Cover</div>
+            {% endif %}
+
+            <div style="flex-grow: 1;">
+                <div style="font-size: 0.9rem; color: #666; margin-bottom: 5px;">
+                    {% if vote.value == 1 %}Upvoted{% else %}Downvoted{% endif %} on <a
+                        href="/prompts/{{ vote.submission.prompt.id }}" style="font-weight: bold;">The Best Book On {{
+                        vote.submission.prompt.title }}</a>
+                </div>
+                <h3 style="margin-bottom: 5px; font-size: 1.2rem;">{{ vote.submission.title }}</h3>
+
+                <div style="margin-top: 10px; font-size: 0.85rem; color: #888;">
+                    <span>Book by {{ vote.submission.submitter_username }}</span>
+                    <span style="margin: 0 10px;">•</span>
+                    <span>Voted on {{ vote.created_at.strftime('%Y-%m-%d') }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color: #666; font-style: italic;">No votes cast yet.</p>
     {% endif %}
 </div>
 

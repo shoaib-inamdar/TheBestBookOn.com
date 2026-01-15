@@ -488,11 +488,18 @@ def user_profile(username: str, request: Request, db: Session = Depends(get_db),
         submitter_vote = next((v for v in sub.votes if v.voter_username == username), None)
         sub.comment = submitter_vote.comment if submitter_vote else None
         
+    # 3. Get Votes by user
+    # We want to show what they voted on
+    user_votes = db.query(Vote).filter(Vote.voter_username == username)\
+        .join(Submission).join(Prompt)\
+        .order_by(Vote.created_at.desc()).all()
+        
     return templates.TemplateResponse("user_profile.html", {
         "request": request,
         "profile_user": username,
         "prompts": user_prompts,
         "submissions": user_submissions,
+        "votes": user_votes,
         "user": user
     })
 
