@@ -24,7 +24,7 @@
 
 <div class="submission-list">
     {% for sub in submissions %}
-    <div class="submission-item">
+    <div class="submission-item" id="book-{{ sub.id }}">
         <div class="vote-section">
             <form action="/vote" method="POST">
                 <input type="hidden" name="submission_id" value="{{ sub.id }}">
