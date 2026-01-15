@@ -201,8 +201,15 @@ def logout(request: Request):
 # --- Routes ---
 
 @app.get("/", response_class=HTMLResponse)
-def read_root(request: Request, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
-    prompts = db.query(Prompt).order_by(Prompt.created_at.desc()).all()
+def read_root(request: Request, q: Optional[str] = None, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
+    if q:
+        # Search prompts where ANY submission has a tag matching q
+        prompts = db.query(Prompt).join(Submission).join(Submission.tags)\
+            .filter(Tag.name.ilike(f"%{q}%"))\
+            .distinct()\
+            .all()
+    else:
+        prompts = db.query(Prompt).order_by(Prompt.created_at.desc()).all()
     
     # Get user favorites
     user_fav_ids = set()
