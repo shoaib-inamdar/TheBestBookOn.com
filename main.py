@@ -475,6 +475,23 @@ def user_profile(username: str, request: Request, db: Session = Depends(get_db),
     # 1. Get Prompts created by user
     user_prompts = db.query(Prompt).filter(Prompt.creator_username == username).order_by(Prompt.created_at.desc()).all()
     
+    # Calculate stats for user prompts (top books)
+    for p in user_prompts:
+        subs = p.submissions
+        # Sort by score manually since it's a dynamic property
+        subs.sort(key=lambda s: s.score, reverse=True)
+        p.top_books = subs[:10]  # Show top 10 like homepage
+        
+        # Tags for display
+        all_tags = []
+        for s in p.submissions:
+            for t in s.tags:
+                all_tags.append(t.name)
+        
+        from collections import Counter
+        tag_counts = Counter(all_tags)
+        p.display_tags = [t for t, _ in tag_counts.most_common(5)]
+    
     # 2. Get Submissions by user
     # We need to join with Prompt eagerly to display prompt title
     # And maybe calc score?

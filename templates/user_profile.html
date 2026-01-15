@@ -17,25 +17,99 @@
 </div>
 
 <div class="tabs" style="display: flex; gap: 20px; border-bottom: 1px solid #eee; margin-bottom: 30px;">
-    <button class="tab-btn active" onclick="switchTab(event, 'prompts')">Started Prompts ({{ prompts|length }})</button>
+    <button class="tab-btn active" onclick="switchTab(event, 'votes')">Votes ({{ votes|length }})</button>
+    <button class="tab-btn" onclick="switchTab(event, 'prompts')">Started Prompts ({{ prompts|length }})</button>
     <button class="tab-btn" onclick="switchTab(event, 'nominations')">Nominations ({{ submissions|length }})</button>
-    <button class="tab-btn" onclick="switchTab(event, 'votes')">Votes ({{ votes|length }})</button>
+</div>
+
+<!-- Votes Tab (Default Active) -->
+<div id="votes" class="tab-content active">
+    {% if votes %}
+    <div class="submission-list" style="margin-top: 0;">
+        {% for vote in votes %}
+        <div class="card" style="margin-bottom: 20px; padding: 20px; display: flex; gap: 20px;">
+            {% if vote.submission.cover_id %}
+            <img src="https://covers.openlibrary.org/b/id/{{ vote.submission.cover_id }}-M.jpg"
+                style="width: 60px; height: 90px; object-fit: cover; border-radius: 4px; box-shadow: var(--shadow-sm);">
+            {% else %}
+            <div
+                style="width: 60px; height: 90px; background: #eee; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #999;">
+                No Cover</div>
+            {% endif %}
+
+            <div style="flex-grow: 1;">
+                <div style="font-size: 0.9rem; color: #666; margin-bottom: 5px;">
+                    {% if vote.value == 1 %}Upvoted{% else %}Downvoted{% endif %} on <a
+                        href="/prompts/{{ vote.submission.prompt.id }}" style="font-weight: bold;">The Best Book On {{
+                        vote.submission.prompt.title }}</a>
+                </div>
+                <h3 style="margin-bottom: 5px; font-size: 1.2rem;">{{ vote.submission.title }}</h3>
+
+                <div style="margin-top: 10px; font-size: 0.85rem; color: #888;">
+                    <span>Book by {{ vote.submission.submitter_username }}</span>
+                    <span style="margin: 0 10px;">•</span>
+                    <span>Voted on {{ vote.created_at.strftime('%Y-%m-%d') }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color: #666; font-style: italic;">No votes cast yet.</p>
+    {% endif %}
 </div>
 
 <!-- Prompts Tab -->
-<div id="prompts" class="tab-content active">
+<div id="prompts" class="tab-content" style="display: none;">
     {% if prompts %}
     <div class="prompts-list">
         {% for prompt in prompts %}
-        <div class="card" style="margin-bottom: 20px; padding: 20px;">
+        <div class="card" style="position: relative; margin-bottom: 30px;">
             <a href="/prompts/{{ prompt.id }}">
-                <h3 style="margin-bottom: 10px; font-size: 1.3rem;">The Best Book On {{ prompt.title }}</h3>
+                <h2 style="font-size: 1.5rem; margin-bottom: 10px; margin-right: 30px;">The Best Book On {{ prompt.title
+                    }}</h2>
             </a>
-            <p style="color: #666; font-size: 0.95rem;">{{ prompt.description }}</p>
-            <div style="margin-top: 10px; font-size: 0.85rem; color: #888;">
-                <span>Created on {{ prompt.created_at.strftime('%Y-%m-%d') }}</span>
-                <span style="margin: 0 10px;">•</span>
-                <span>{{ prompt.submissions|length }} books nominated</span>
+            <p style="color: #666; margin-bottom: 15px;">{{ prompt.description }}</p>
+
+            <!-- Book Preview Row -->
+            {% if prompt.top_books %}
+            <div style="display: flex; gap: 15px; margin: 20px 0; overflow-x: auto; padding-bottom: 10px;">
+                {% for book in prompt.top_books %}
+                <div style="position: relative; width: 80px; flex-shrink: 0;">
+                    {% if loop.index == 1 %}<div class="rank-badge gold">#1</div>{% endif %}
+                    {% if loop.index == 2 %}<div class="rank-badge silver">#2</div>{% endif %}
+                    {% if loop.index == 3 %}<div class="rank-badge bronze">#3</div>{% endif %}
+                    {% if loop.index >= 4 %}<div class="rank-badge honorary">#{{ loop.index }}</div>{% endif %}
+
+                    {% if book.cover_id %}
+                    <a href="/prompts/{{ prompt.id }}#book-{{ book.id }}" style="display: block;">
+                        <img src="https://covers.openlibrary.org/b/id/{{ book.cover_id }}-M.jpg"
+                            style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"
+                            title="{{ book.title }}">
+                    </a>
+                    {% else %}
+                    <div
+                        style="width: 100%; height: 120px; background: #eee; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; text-align: center; color: #999;">
+                        No Cover
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="prompt-meta"
+                style="font-size: 0.9rem; color: #888; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f0f0f0; padding-top: 15px; margin-top: 10px;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div class="prompt-tags" style="margin: 0; display: inline;">
+                        {% for tag in prompt.display_tags %}
+                        <span class="tag">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div>
+                    {{ prompt.submissions|length }} books • {{ prompt.created_at.strftime('%Y-%m-%d') }}
+                </div>
             </div>
         </div>
         {% endfor %}
@@ -85,42 +159,7 @@
     {% endif %}
 </div>
 
-<!-- Votes Tab -->
-<div id="votes" class="tab-content" style="display: none;">
-    {% if votes %}
-    <div class="submission-list" style="margin-top: 0;">
-        {% for vote in votes %}
-        <div class="card" style="margin-bottom: 20px; padding: 20px; display: flex; gap: 20px;">
-            {% if vote.submission.cover_id %}
-            <img src="https://covers.openlibrary.org/b/id/{{ vote.submission.cover_id }}-M.jpg"
-                style="width: 60px; height: 90px; object-fit: cover; border-radius: 4px; box-shadow: var(--shadow-sm);">
-            {% else %}
-            <div
-                style="width: 60px; height: 90px; background: #eee; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #999;">
-                No Cover</div>
-            {% endif %}
 
-            <div style="flex-grow: 1;">
-                <div style="font-size: 0.9rem; color: #666; margin-bottom: 5px;">
-                    {% if vote.value == 1 %}Upvoted{% else %}Downvoted{% endif %} on <a
-                        href="/prompts/{{ vote.submission.prompt.id }}" style="font-weight: bold;">The Best Book On {{
-                        vote.submission.prompt.title }}</a>
-                </div>
-                <h3 style="margin-bottom: 5px; font-size: 1.2rem;">{{ vote.submission.title }}</h3>
-
-                <div style="margin-top: 10px; font-size: 0.85rem; color: #888;">
-                    <span>Book by {{ vote.submission.submitter_username }}</span>
-                    <span style="margin: 0 10px;">•</span>
-                    <span>Voted on {{ vote.created_at.strftime('%Y-%m-%d') }}</span>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <p style="color: #666; font-style: italic;">No votes cast yet.</p>
-    {% endif %}
-</div>
 
 <style>
     .tab-btn {
