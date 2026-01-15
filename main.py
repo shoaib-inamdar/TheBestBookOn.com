@@ -294,13 +294,22 @@ def read_prompt(prompt_id: int, request: Request, db: Session = Depends(get_db),
     })
 
 # Form to create a prompt
-@app.post("/prompts")
+@app.post("/prompts", response_class=RedirectResponse)
 def create_prompt(
     title: str = Form(...),
     description: str = Form(...),
     db: Session = Depends(get_db),
     user: str = Depends(get_current_user)
 ):
+    if not user:
+        # Redirect to login if not authenticated (or raise 401 if it was an API)
+        # Since this is a form post, a redirect to login is better UX, maybe with a flash message?
+        # But for now, let's just error or redirect.
+        # The user said "it says you need to be logged in but creates anyway".
+        # Let's verify the behavior.
+        # Raise HTTP exception is safer for stopping execution.
+        raise HTTPException(status_code=401, detail="Authentication required")
+
     new_prompt = Prompt(
         title=title,
         description=description,
@@ -308,7 +317,6 @@ def create_prompt(
     )
     db.add(new_prompt)
     db.commit()
-    db.refresh(new_prompt)
     return RedirectResponse(url=f"/prompts/{new_prompt.id}", status_code=303)
 
 @app.get("/api/search_books")

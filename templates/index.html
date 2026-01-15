@@ -7,7 +7,11 @@
         Join the search for the definitive books on every topic.
         Vote for the best books, or start a new collection.
     </p>
+    {% if user %}
     <button class="btn btn-primary" onclick="openModal('createPromptModal')">Start a Prompt</button>
+    {% else %}
+    <a href="/login" class="btn btn-primary">Login to Start a Prompt</a>
+    {% endif %}
 </div>
 
 <div class="prompts-list">
