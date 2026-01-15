@@ -470,3 +470,29 @@ def toggle_favorite(
     db.commit()
     return {"favorited": favorited}
 
+@app.get("/users/{username}", response_class=HTMLResponse)
+def user_profile(username: str, request: Request, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
+    # 1. Get Prompts created by user
+    user_prompts = db.query(Prompt).filter(Prompt.creator_username == username).order_by(Prompt.created_at.desc()).all()
+    
+    # 2. Get Submissions by user
+    # We need to join with Prompt eagerly to display prompt title
+    # And maybe calc score?
+    user_submissions = db.query(Submission).filter(Submission.submitter_username == username)\
+        .order_by(Submission.created_at.desc()).all()
+        
+    # Enrich submissions with score and comment
+    # Note: Optimization would be joined load on votes, but lazy load is OK for small scale
+    for sub in user_submissions:
+        # Find submitter's comment (their own vote)
+        submitter_vote = next((v for v in sub.votes if v.voter_username == username), None)
+        sub.comment = submitter_vote.comment if submitter_vote else None
+        
+    return templates.TemplateResponse("user_profile.html", {
+        "request": request,
+        "profile_user": username,
+        "prompts": user_prompts,
+        "submissions": user_submissions,
+        "user": user
+    })
+

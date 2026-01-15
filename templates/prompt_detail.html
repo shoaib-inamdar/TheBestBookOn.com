@@ -78,7 +78,9 @@
             {% endif %}
 
             <p style="font-size: 0.8rem; margin-top: 10px; color: #888;">
-                <em>Nominated by {{ sub.submitter_username }} on {{ sub.created_at.strftime('%Y-%m-%d') }}</em>
+                <em>Nominated by <a href="/users/{{ sub.submitter_username }}"
+                        style="color: inherit; text-decoration: none; font-weight: bold;">{{ sub.submitter_username
+                        }}</a> on {{ sub.created_at.strftime('%Y-%m-%d') }}</em>
             </p>
         </div>
     </div>

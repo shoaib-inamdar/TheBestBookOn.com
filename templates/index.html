@@ -55,7 +55,8 @@
             <div style="display: flex; gap: 10px; align-items: center;">
                 <img src="https://ui-avatars.com/api/?name={{ prompt.creator_username }}&background=random&size=24&rounded=true"
                     style="vertical-align: middle;">
-                <span>By <strong>{{ prompt.creator_username }}</strong></span>
+                <span>By <a href="/users/{{ prompt.creator_username }}"
+                        style="font-weight: bold; text-decoration: none;">{{ prompt.creator_username }}</a></span>
                 <span style="margin: 0 5px;">•</span>
                 <div class="prompt-tags" style="margin: 0; display: inline;">
                     {% for tag in prompt.display_tags %}
