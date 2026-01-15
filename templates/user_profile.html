@@ -156,6 +156,12 @@
                 <p style="color: #444; font-size: 0.95rem; margin-top: 5px; font-style: italic;">"{{ sub.comment }}"</p>
                 {% endif %}
 
+                <div class="prompt-tags" style="margin-top: 10px; margin-bottom: 5px;">
+                    {% for tag in sub.tags %}
+                    <a href="/?q={{ tag.name }}" class="tag" style="text-decoration: none; color: inherit;">{{ tag.name
+                        }}</a>
+                    {% endfor %}
+                </div>
                 <div style="margin-top: 10px; font-size: 0.85rem; color: #888;">
                     <span>{{ sub.score }} Upvotes</span>
                     <span style="margin: 0 10px;">•</span>

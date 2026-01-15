@@ -83,8 +83,15 @@ class Submission(Base):
     
     @property
     def openlibrary_url(self):
-        # We always prefer linking to the specific edition now
+        if not self.openlibrary_edition_key:
+            return "#"
         return f"https://openlibrary.org/books/{self.openlibrary_edition_key}"
+        
+    @property
+    def borrow_url(self):
+        if not self.openlibrary_edition_key:
+            return "#"
+        return f"https://openlibrary.org/books/{self.openlibrary_edition_key}/-/borrow"
 
 class Vote(Base):
     __tablename__ = "votes"
@@ -502,7 +509,7 @@ def get_prompt_voters(prompt_id: int, skip: int = 0, limit: int = 10, db: Sessio
     # Get total count first for pagination logic (optional, but good for "has_more")
     # Actually just fetch limit + 1 to check has_more
     
-    voters_query = db.query(Vote.voter_username, func.max(Vote.timestamp).label("last_vote"))\
+    voters_query = db.query(Vote.voter_username, func.max(Vote.created_at).label("last_vote"))\
         .filter(Vote.submission_id.in_(sub_ids))\
         .group_by(Vote.voter_username)\
         .order_by(text("last_vote DESC"))
@@ -520,7 +527,7 @@ def get_prompt_voters(prompt_id: int, skip: int = 0, limit: int = 10, db: Sessio
 @app.get("/api/submissions/{submission_id}/voters")
 def get_submission_voters(submission_id: int, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     # Get all votes for this submission
-    votes_query = db.query(Vote).filter(Vote.submission_id == submission_id).order_by(Vote.timestamp.desc())
+    votes_query = db.query(Vote).filter(Vote.submission_id == submission_id).order_by(Vote.created_at.desc())
     
     votes = votes_query.offset(skip).limit(limit + 1).all()
     
@@ -531,7 +538,7 @@ def get_submission_voters(submission_id: int, skip: int = 0, limit: int = 10, db
         "voters": [{
             "username": v.voter_username, 
             "value": v.value, # 1 or -1
-            "timestamp": v.timestamp
+            "created_at": v.created_at
         } for v in results],
         "has_more": has_more
     }

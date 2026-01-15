@@ -15,7 +15,7 @@
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <div class="prompt-tags">
             {% for tag in prompt.display_tags %}
-            <span class="tag">{{ tag }}</span>
+            <a href="/?q={{ tag }}" class="tag" style="text-decoration: none; color: inherit;">{{ tag }}</a>
             {% endfor %}
         </div>
         {% if user %}
@@ -29,13 +29,13 @@
 <div class="submission-list">
     {% for sub in submissions %}
     <div class="submission-item" id="book-{{ sub.id }}"
-        style="display: flex; gap: 20px; margin-bottom: 30px; padding: 20px; background: white; border-radius: 8px; box-shadow: var(--shadow-sm);">
+        style="background: white; padding: 20px; border-radius: 8px; box-shadow: var(--shadow-sm); border: none;">
         <div class="vote-section">
             {% if user %}
             <form action="/vote" method="post">
                 <input type="hidden" name="submission_id" value="{{ sub.id }}">
                 <input type="hidden" name="value" value="1">
-                <button type="submit" class="vote-btn {% if sub.user_vote_value == 1 %}active{% endif %}"
+                <button type="submit" class="vote-btn {% if sub.user_vote_value == 1 %}voted{% endif %}"
                     title="Upvote">▲</button>
             </form>
             {% else %}
@@ -50,7 +50,7 @@
             <form action="/vote" method="post">
                 <input type="hidden" name="submission_id" value="{{ sub.id }}">
                 <input type="hidden" name="value" value="-1">
-                <button type="submit" class="vote-btn {% if sub.user_vote_value == -1 %}active{% endif %}"
+                <button type="submit" class="vote-btn {% if sub.user_vote_value == -1 %}voted{% endif %}"
                     title="Downvote">▼</button>
             </form>
             {% else %}
@@ -58,13 +58,20 @@
             {% endif %}
         </div>
 
-        {% if sub.cover_id %}
-        <img src="https://covers.openlibrary.org/b/id/{{ sub.cover_id }}-M.jpg" alt="Cover" class="book-cover">
-        {% else %}
-        <div class="book-cover"
-            style="display:flex;align-items:center;justify-content:center;color:#ccc;text-align:center;font-size:0.8rem;">
-            No Cover</div>
-        {% endif %}
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            {% if sub.cover_id %}
+            <img src="https://covers.openlibrary.org/b/id/{{ sub.cover_id }}-M.jpg" alt="Cover" class="book-cover">
+            {% else %}
+            <div class="book-cover"
+                style="display:flex;align-items:center;justify-content:center;color:#ccc;text-align:center;font-size:0.8rem;">
+                No Cover</div>
+            {% endif %}
+
+            {% if sub.ebook_access in ['borrowable', 'public', 'printdisabled'] %}
+            <a href="{{ sub.borrow_url }}" target="_blank" class="btn btn-primary"
+                style="font-size: 0.8rem; padding: 5px 10px; background-color: #d9534f; width: 100%; text-align: center;">Read</a>
+            {% endif %}
+        </div>
 
         <div class="book-details">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -74,15 +81,13 @@
                     </a>
                     <div class="prompt-tags" style="margin-top: 5px; margin-bottom: 10px;">
                         {% for tag in sub.tags %}
-                        <span class="tag">{{ tag.name }}</span>
+                        <a href="/?q={{ tag.name }}" class="tag" style="text-decoration: none; color: inherit;">{{
+                            tag.name }}</a>
                         {% endfor %}
                     </div>
                 </div>
 
-                {% if sub.ebook_access in ['borrowable', 'public', 'printdisabled'] %}
-                <a href="{{ sub.openlibrary_url }}" target="_blank" class="btn btn-primary"
-                    style="font-size: 0.9rem; padding: 5px 15px; background-color: #007bff;">Read Book</a>
-                {% endif %}
+                {# Read button moved to cover column #}
             </div>
 
             {% if sub.comment %}
@@ -124,6 +129,7 @@
             <input type="hidden" name="edition_key" id="selectedEditionKey">
             <input type="hidden" name="title" id="selectedTitleInput">
             <input type="hidden" name="cover_id" id="selectedCoverId">
+            <input type="hidden" name="ebook_access" id="selectedEbookAccess">
 
             <div
                 style="margin: 15px 0; padding: 10px; background: #f9f9f9; border-radius: 6px; display: flex; align-items: center; gap: 10px;">
@@ -235,8 +241,8 @@
     }
 
     // Modal Logic
-    function openModal(id) { document.getElementById(id).classList.add('active'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    // openModal and closeModal are now in base.html
+
     window.onclick = function (event) {
         if (event.target.classList.contains('modal-overlay')) {
             event.target.classList.remove('active');
@@ -251,116 +257,122 @@
     }
 
     // Search Logic for Nomination
-    let debounceTimer;
-    const searchInput = document.getElementById('bookSearchInput');
-    const resultsDiv = document.getElementById('searchResults');
+    (function () {
+        let debounceTimer;
+        const bSearchInput = document.getElementById('bookSearchInput');
+        const bResultsDiv = document.getElementById('searchResults');
 
-    searchInput.addEventListener('input', (e) => {
-        clearTimeout(debounceTimer);
-        const query = e.target.value;
-        if (query.length < 3) {
-            resultsDiv.classList.remove('active');
-            return;
-        }
+        if (!bSearchInput) return;
 
-        debounceTimer = setTimeout(async () => {
-            const res = await fetch(`/api/search_books?q=${encodeURIComponent(query)}`);
-            const data = await res.json();
-
-            resultsDiv.innerHTML = '';
-            if (data.docs) {
-                data.docs.forEach(doc => {
-                    const div = document.createElement('div');
-                    div.className = 'search-result-item';
-                    div.innerHTML = `
-                    <img class="search-result-cover" src="${doc.cover_i ? 'https://covers.openlibrary.org/b/id/' + doc.cover_i + '-S.jpg' : ''}">
-                    <div>
-                        <div style="font-weight:bold">${doc.title}</div>
-                        <div style="font-size:0.8rem">${doc.author_name ? doc.author_name[0] : ''} (${doc.first_publish_year || ''})</div>
-                    </div>
-                `;
-                    div.onclick = () => selectBook(doc);
-                    resultsDiv.appendChild(div);
-                });
-                resultsDiv.classList.add('active');
+        bSearchInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            const query = e.target.value;
+            if (query.length < 3) {
+                bResultsDiv.classList.remove('active');
+                return;
             }
-        }, 300);
-    });
 
-    function selectBook(doc) {
-        // PREFER EDITION KEY
-        // If edition_key array exists, take the first one. Else fall back to Work Key (split from key)
-        let key = '';
-        if (doc.edition_key && doc.edition_key.length > 0) {
-            key = doc.edition_key[0];
-        } else {
-            key = doc.key.split('/').pop(); // "OL123W" likely
+            debounceTimer = setTimeout(async () => {
+                const res = await fetch(`/api/search_books?q=${encodeURIComponent(query)}`);
+                const data = await res.json();
+
+                bResultsDiv.innerHTML = '';
+                if (data.docs) {
+                    data.docs.forEach(doc => {
+                        const div = document.createElement('div');
+                        div.className = 'search-result-item';
+                        div.innerHTML = `
+                        <img class="search-result-cover" src="${doc.cover_i ? 'https://covers.openlibrary.org/b/id/' + doc.cover_i + '-S.jpg' : ''}">
+                        <div>
+                            <div style="font-weight:bold">${doc.title}</div>
+                            <div style="font-size:0.8rem">${doc.author_name ? doc.author_name[0] : ''} (${doc.first_publish_year || ''})</div>
+                        </div>
+                    `;
+                        div.onclick = () => selectBook(doc);
+                        bResultsDiv.appendChild(div);
+                    });
+                    bResultsDiv.classList.add('active');
+                }
+            }, 300);
+        });
+
+        function selectBook(doc) {
+            let key = '';
+            if (doc.edition_key && doc.edition_key.length > 0) {
+                key = doc.edition_key[0];
+            } else {
+                key = doc.key.split('/').pop();
+            }
+
+            document.getElementById('selectedEditionKey').value = key;
+            document.getElementById('selectedTitleInput').value = doc.title;
+            document.getElementById('selectedCoverId').value = doc.cover_i || '';
+            document.getElementById('selectedEbookAccess').value = doc.ebook_access || '';
+
+            document.getElementById('selectedTitleDisplay').innerText = doc.title;
+
+            const coverImg = document.getElementById('selectedCover');
+            if (doc.cover_i) {
+                coverImg.src = `https://covers.openlibrary.org/b/id/${doc.cover_i}-S.jpg`;
+                coverImg.style.display = 'block';
+            } else {
+                coverImg.style.display = 'none';
+            }
+            document.getElementById('submitForm').style.display = 'block';
+            bResultsDiv.classList.remove('active');
         }
-
-        document.getElementById('selectedEditionKey').value = key;
-        document.getElementById('selectedTitleInput').value = doc.title;
-        document.getElementById('selectedCoverId').value = doc.cover_i || '';
-
-        document.getElementById('selectedTitleDisplay').innerText = doc.title;
-
-        const coverImg = document.getElementById('selectedCover');
-        if (doc.cover_i) {
-            coverImg.src = `https://covers.openlibrary.org/b/id/${doc.cover_i}-S.jpg`;
-            coverImg.style.display = 'block';
-        } else {
-            coverImg.style.display = 'none';
-        }
-        document.getElementById('submitForm').style.display = 'block';
-        resultsDiv.classList.remove('active');
-    }
+    })();
 
     // Tag Autocomplete
-    const tagsInput = document.getElementById('tagsInput');
-    const tagSuggestions = document.getElementById('tagSuggestions');
+    (function () {
+        const tInput = document.getElementById('tagsInput');
+        const tSuggestions = document.getElementById('tagSuggestions');
 
-    tagsInput.addEventListener('input', async (e) => {
-        const val = e.target.value;
-        const currentTag = val.split(',').pop().trim();
+        if (!tInput) return;
 
-        if (currentTag.length < 1) {
-            tagSuggestions.classList.remove('active');
-            return;
-        }
+        tInput.addEventListener('input', async (e) => {
+            const val = e.target.value;
+            const currentTag = val.split(',').pop().trim();
 
-        try {
-            const res = await fetch(`/api/tags?q=${encodeURIComponent(currentTag)}`);
-            const tags = await res.json();
-
-            tagSuggestions.innerHTML = '';
-            if (tags.length > 0) {
-                tags.forEach(tag => {
-                    const div = document.createElement('div');
-                    div.className = 'search-result-item';
-                    div.innerText = tag;
-                    div.onclick = () => {
-                        const parts = tagsInput.value.split(',');
-                        parts.pop(); // remove partial
-                        parts.push(' ' + tag);
-                        tagsInput.value = parts.join(',') + ', ';
-                        tagSuggestions.classList.remove('active');
-                        tagsInput.focus();
-                    };
-                    tagSuggestions.appendChild(div);
-                });
-                tagSuggestions.classList.add('active');
-            } else {
-                tagSuggestions.classList.remove('active');
+            if (currentTag.length < 1) {
+                tSuggestions.classList.remove('active');
+                return;
             }
-        } catch (err) {
-            console.error(err);
-        }
-    });
 
-    // Close suggestions on click outside
-    window.addEventListener('click', (e) => {
-        if (e.target !== tagsInput) {
-            tagSuggestions.classList.remove('active');
-        }
-    });
+            try {
+                const res = await fetch(`/api/tags?q=${encodeURIComponent(currentTag)}`);
+                const tags = await res.json();
+
+                tSuggestions.innerHTML = '';
+                if (tags.length > 0) {
+                    tags.forEach(tag => {
+                        const div = document.createElement('div');
+                        div.className = 'search-result-item';
+                        div.innerText = tag;
+                        div.onclick = () => {
+                            const parts = tInput.value.split(',');
+                            parts.pop();
+                            parts.push(' ' + tag);
+                            tInput.value = parts.join(',') + ', ';
+                            tSuggestions.classList.remove('active');
+                            tInput.focus();
+                        };
+                        tSuggestions.appendChild(div);
+                    });
+                    tSuggestions.classList.add('active');
+                } else {
+                    tSuggestions.classList.remove('active');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target !== tInput) {
+                tSuggestions.classList.remove('active');
+            }
+        });
+    })();
 </script>
 {% endblock %}
