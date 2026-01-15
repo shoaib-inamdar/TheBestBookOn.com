@@ -571,13 +571,9 @@ def delete_submission(submission_id: int, db: Session = Depends(get_db), user: s
     db.commit()
     return {"success": True}
 
-@app.get("/users/{username}", response_class=HTMLResponse)
-def user_profile(username: str, request: Request, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
-    # 1. Get Prompts created by user
-    user_prompts = db.query(Prompt).filter(Prompt.creator_username == username).order_by(Prompt.created_at.desc()).all()
-    
-    # Calculate stats for user prompts (top books)
-    for p in user_prompts:
+def _enrich_prompt_details(prompt_list, user_fav_ids=None):
+    from collections import Counter
+    for p in prompt_list:
         subs = p.submissions
         # Sort by score manually since it's a dynamic property
         subs.sort(key=lambda s: s.score, reverse=True)
@@ -589,7 +585,6 @@ def user_profile(username: str, request: Request, db: Session = Depends(get_db),
             for t in s.tags:
                 all_tags.append(t.name)
         
-        from collections import Counter
         tag_counts = Counter(all_tags)
         p.display_tags = [t for t, _ in tag_counts.most_common(5)]
         
@@ -602,22 +597,36 @@ def user_profile(username: str, request: Request, db: Session = Depends(get_db),
             for v in s.votes:
                 voter_set.add(v.voter_username)
         p.total_voters = len(voter_set)
+        
+        # Set is_favorited for UI
+        p.is_favorited = p.id in user_fav_ids if user_fav_ids else False
+
+@app.get("/users/{username}", response_class=HTMLResponse)
+def user_profile(username: str, request: Request, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
+    # 0. Get current user favorites for highlighting
+    user_fav_ids = set()
+    if user:
+        favs = db.query(Favorite).filter(Favorite.username == user).all()
+        user_fav_ids = {f.prompt_id for f in favs}
+
+    # 1. Get Prompts created by user
+    user_prompts = db.query(Prompt).filter(Prompt.creator_username == username).order_by(Prompt.created_at.desc()).all()
+    _enrich_prompt_details(user_prompts, user_fav_ids)
     
-    # 2. Get Submissions by user
-    # We need to join with Prompt eagerly to display prompt title
-    # And maybe calc score?
+    # 2. Get Favorite Prompts
+    # Join Favorite with Prompt
+    favorite_prompts = db.query(Prompt).join(Favorite).filter(Favorite.username == username).order_by(Favorite.created_at.desc()).all()
+    _enrich_prompt_details(favorite_prompts, user_fav_ids)
+
+    # 3. Get Submissions by user
     user_submissions = db.query(Submission).filter(Submission.submitter_username == username)\
         .order_by(Submission.created_at.desc()).all()
         
-    # Enrich submissions with score and comment
-    # Note: Optimization would be joined load on votes, but lazy load is OK for small scale
     for sub in user_submissions:
-        # Find submitter's comment (their own vote)
         submitter_vote = next((v for v in sub.votes if v.voter_username == username), None)
         sub.comment = submitter_vote.comment if submitter_vote else None
         
-    # 3. Get Votes by user
-    # We want to show what they voted on
+    # 4. Get Votes by user
     user_votes = db.query(Vote).filter(Vote.voter_username == username)\
         .join(Submission).join(Prompt)\
         .order_by(Vote.created_at.desc()).all()
@@ -626,6 +635,7 @@ def user_profile(username: str, request: Request, db: Session = Depends(get_db),
         "request": request,
         "profile_user": username,
         "prompts": user_prompts,
+        "favorite_prompts": favorite_prompts,
         "submissions": user_submissions,
         "votes": user_votes,
         "user": user

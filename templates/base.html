@@ -81,7 +81,8 @@
         </div>
         <div style="display: flex; gap: 15px; align-items: center;">
             {% if user %}
-            <span>Hello, <strong>{{ user }}</strong></span>
+            <span>Hello, <a href="/users/{{ user }}" style="text-decoration: none; color: inherit;"><strong>{{ user
+                        }}</strong></a></span>
             <a href="/logout" class="btn btn-outline" style="padding: 5px 10px; font-size: 0.8rem;">Logout</a>
             {% else %}
             <a href="/login" class="btn btn-primary" style="padding: 5px 15px;">Login</a>
