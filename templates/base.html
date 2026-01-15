@@ -94,6 +94,26 @@
         &copy; 2026 TheBestBookOn.com
     </footer>
 
+    <script>
+        async function toggleFavorite(event, promptId, btn) {
+            // Prevent clicking the card link
+            event.stopPropagation();
+            event.preventDefault();
+
+            try {
+                const res = await fetch(`/api/prompts/${promptId}/toggle_favorite`, { method: 'POST' });
+                const data = await res.json();
+
+                if (data.favorited) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            } catch (err) {
+                console.error("Failed to toggle favorite", err);
+            }
+        }
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 

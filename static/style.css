@@ -295,9 +295,36 @@ textarea:focus {
 .search-results {
     margin-top: 15px;
     border: 1px solid #eee;
-    max-height: 200px;
-    overflow-y: auto;
-    border-radius: 6px;
+
+    /* Favorite Button */
+    .favorite-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #ddd;
+        cursor: pointer;
+        transition: all 0.2s;
+        z-index: 10;
+        line-height: 1;
+    }
+
+    .favorite-btn:hover {
+        transform: scale(1.1);
+        color: #aaa;
+    }
+
+    .favorite-btn.active {
+        color: #e0245e;
+        /* Heart Red */
+    }
+
+    .favorite-btn.active:hover {
+        color: #c0144e;
+    }
+
     display: none;
 }
 
