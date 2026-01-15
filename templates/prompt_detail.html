@@ -29,10 +29,16 @@
             <form action="/vote" method="POST">
                 <input type="hidden" name="submission_id" value="{{ sub.id }}">
                 <input type="hidden" name="value" value="1">
-                <button type="submit" class="vote-btn {% if sub.user_has_voted %}voted{% endif %}"
+                <button type="submit" class="vote-btn {% if sub.user_vote_value == 1 %}voted{% endif %}"
                     title="Vote Up">▲</button>
             </form>
             <span class="vote-count">{{ sub.score }}</span>
+            <form action="/vote" method="POST">
+                <input type="hidden" name="submission_id" value="{{ sub.id }}">
+                <input type="hidden" name="value" value="-1">
+                <button type="submit" class="vote-btn {% if sub.user_vote_value == -1 %}voted{% endif %}"
+                    title="Vote Down">▼</button>
+            </form>
         </div>
 
         {% if sub.cover_id %}

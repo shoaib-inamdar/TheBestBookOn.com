@@ -264,7 +264,9 @@ def read_prompt(prompt_id: int, request: Request, db: Session = Depends(get_db),
     # Check if user voted & Aggregate tags for display on detail page
     tag_counts = {}
     for sub in submissions:
-        sub.user_has_voted = any(v.voter_username == user for v in sub.votes)
+        # Determine user's vote value (1, -1, or None)
+        user_vote = next((v for v in sub.votes if v.voter_username == user), None)
+        sub.user_vote_value = user_vote.value if user_vote else 0
         
         # Get the original vote comment (from the submitter)
         # We assume the submitter always votes 1 on creation, so find their vote
