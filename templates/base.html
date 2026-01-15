@@ -19,12 +19,61 @@
             TheBestBookOn.com
         </a>
 
-        <div style="flex-grow: 1; margin: 0 40px;">
-            <form action="/" method="get">
-                <input type="text" name="q" placeholder="Search prompts by tag..."
-                    value="{{ request.query_params.get('q', '') }}"
+        <div style="flex-grow: 1; margin: 0 40px; position: relative;">
+            <form action="/" method="get" id="searchForm">
+                <input type="text" name="q" id="searchInput" placeholder="Search prompts by tag..."
+                    value="{{ request.query_params.get('q', '') }}" autocomplete="off"
                     style="width: 100%; padding: 8px 15px; border-radius: 20px; border: 1px solid #ddd; background: #f9f9f9; font-size: 0.9rem;">
             </form>
+            <div id="headerSearchSuggestions" class="search-results"
+                style="position: absolute; top: 100%; left: 0; right: 0; background: white; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 0 0 8px 8px; margin-top: 5px;">
+            </div>
+
+            <script>
+                const searchInput = document.getElementById('searchInput');
+                const searchResults = document.getElementById('headerSearchSuggestions');
+                const searchForm = document.getElementById('searchForm');
+
+                searchInput.addEventListener('input', async (e) => {
+                    const query = e.target.value.trim();
+                    if (query.length < 1) {
+                        searchResults.classList.remove('active');
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch(`/api/tags?q=${encodeURIComponent(query)}`);
+                        const tags = await res.json();
+
+                        searchResults.innerHTML = '';
+                        if (tags.length > 0) {
+                            tags.forEach(tag => {
+                                const div = document.createElement('div');
+                                div.className = 'search-result-item';
+                                div.innerText = tag;
+                                div.onclick = () => {
+                                    searchInput.value = tag;
+                                    searchResults.classList.remove('active');
+                                    searchForm.submit();
+                                };
+                                searchResults.appendChild(div);
+                            });
+                            searchResults.classList.add('active');
+                        } else {
+                            searchResults.classList.remove('active');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                });
+
+                // Close on click outside
+                window.addEventListener('click', (e) => {
+                    if (!e.target.closest('#headerSearchSuggestions') && e.target !== searchInput) {
+                        searchResults.classList.remove('active');
+                    }
+                });
+            </script>
         </div>
         <div style="display: flex; gap: 15px; align-items: center;">
             {% if user %}
