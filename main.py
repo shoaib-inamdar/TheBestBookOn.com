@@ -476,7 +476,46 @@ def toggle_favorite(
         favorited = True
     
     db.commit()
+    db.commit()
     return {"favorited": favorited}
+
+@app.get("/api/prompts/{prompt_id}/voters")
+def get_prompt_voters(prompt_id: int, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    # Get distinct voters for this prompt's submissions
+    # We want to identify if they upvoted or downvoted something? 
+    # The request says "list of people who have votes either thumbs up or thumbs down for this nomination"
+    # But as discussed, the icon is on the prompt level. So we will list voters who participated in this prompt.
+    
+    # We need to distinct by username.
+    # Logic: Get all votes for submissions in this prompt. Group by username.
+    # Maybe show their latest activity date?
+    
+    # Query:
+    # Select distinct voter_username from votes joined with submission where submission.prompt_id = prompt_id
+    
+    sub_ids = db.query(Submission.id).filter(Submission.prompt_id == prompt_id).all()
+    sub_ids = [s[0] for s in sub_ids]
+    
+    if not sub_ids:
+        return {"voters": [], "has_more": False}
+        
+    # Get total count first for pagination logic (optional, but good for "has_more")
+    # Actually just fetch limit + 1 to check has_more
+    
+    voters_query = db.query(Vote.voter_username, func.max(Vote.timestamp).label("last_vote"))\
+        .filter(Vote.submission_id.in_(sub_ids))\
+        .group_by(Vote.voter_username)\
+        .order_by(text("last_vote DESC"))
+        
+    voters = voters_query.offset(skip).limit(limit + 1).all()
+    
+    has_more = len(voters) > limit
+    results = voters[:limit]
+    
+    return {
+        "voters": [{"username": v[0], "last_active": v[1]} for v in results],
+        "has_more": has_more
+    }
 
 # Admin Endpoints
 @app.delete("/api/prompts/{prompt_id}")
