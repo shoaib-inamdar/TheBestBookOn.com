@@ -31,8 +31,7 @@
                 {% if loop.index == 1 %}<div class="rank-badge gold">#1</div>{% endif %}
                 {% if loop.index == 2 %}<div class="rank-badge silver">#2</div>{% endif %}
                 {% if loop.index == 3 %}<div class="rank-badge bronze">#3</div>{% endif %}
-                {% if loop.index == 4 %}<div class="rank-badge honorary">#4</div>{% endif %}
-                {% if loop.index == 5 %}<div class="rank-badge honorary">#5</div>{% endif %}
+                {% if loop.index >= 4 %}<div class="rank-badge honorary">#{{ loop.index }}</div>{% endif %}
 
                 {% if book.cover_id %}
                 <img src="https://covers.openlibrary.org/b/id/{{ book.cover_id }}-M.jpg"

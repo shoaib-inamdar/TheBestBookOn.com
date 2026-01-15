@@ -215,7 +215,7 @@ def read_root(request: Request, db: Session = Depends(get_db), user: str = Depen
     for p in prompts:
         subs = p.submissions
         subs.sort(key=lambda s: s.score, reverse=True)
-        top_books = subs[:5]
+        top_books = subs[:10]
         
         total_votes = sum([s.score for s in subs])
         # Count unique voters
