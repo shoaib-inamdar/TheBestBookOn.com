@@ -147,6 +147,14 @@
                 console.error(err);
             }
         }
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
     </script>
     {% block scripts %}{% endblock %}
 </body>
