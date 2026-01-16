@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div style="text-align: center; margin-bottom: 50px; margin-top: 40px;">
-    <h1 style="margin-bottom: 10px;">An open source community effort<br>to surface the best books</h1>
-    <p class="lead" style="margin: 0 auto 30px auto; font-size: 1.1rem; color: #666;">
+<div class="hero">
+    <h1>An open source community effort<br>to surface the best books</h1>
+    <p class="lead">
         Join the search for the definitive books on every topic.
         Vote for the best books, or start a new collection.
     </p>
@@ -16,42 +16,38 @@
 
 <div class="prompts-list">
     {% for prompt in prompts %}
-    <div class="card" style="position: relative;">
+    <div class="card card-relative">
         <button class="favorite-btn {% if prompt.is_favorited %}active{% endif %}"
             onclick="toggleFavorite(event, {{ prompt.id }}, this)" title="Heart this prompt">
             ♥
         </button>
         {% if user == 'mekBot' %}
-        <button class="delete-btn" onclick="deletePrompt(event, {{ prompt.id }})" title="Delete Prompt"
-            style="position: absolute; top: 20px; right: 60px; background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer;">
+        <button class="btn-delete-icon" onclick="deletePrompt(event, {{ prompt.id }})" title="Delete Prompt">
             ✕
         </button>
         {% endif %}
         <a href="/prompts/{{ prompt.id }}">
-            <h2 style="font-size: 1.5rem; margin-bottom: 10px; margin-right: 30px;">The Best Book On {{ prompt.title }}
+            <h2 class="prompt-title">The Best Book On {{ prompt.title }}
             </h2>
         </a>
-        <p style="color: #666; margin-bottom: 15px;">{{ prompt.description }}</p>
+        <p class="prompt-description">{{ prompt.description }}</p>
 
         <!-- Book Preview Row -->
         {% if prompt.top_books %}
-        <div style="display: flex; gap: 15px; margin: 20px 0; overflow-x: auto; padding-bottom: 10px;">
+        <div class="book-preview-row">
             {% for book in prompt.top_books %}
-            <div style="position: relative; width: 80px; flex-shrink: 0;">
+            <div class="book-preview-item">
                 {% if loop.index == 1 %}<div class="rank-badge gold">#1</div>{% endif %}
                 {% if loop.index == 2 %}<div class="rank-badge silver">#2</div>{% endif %}
                 {% if loop.index == 3 %}<div class="rank-badge bronze">#3</div>{% endif %}
                 {% if loop.index >= 4 %}<div class="rank-badge honorary">#{{ loop.index }}</div>{% endif %}
-
                 {% if book.cover_id %}
-                <a href="/prompts/{{ prompt.id }}#book-{{ book.id }}" style="display: block;">
-                    <img src="https://covers.openlibrary.org/b/id/{{ book.cover_id }}-M.jpg"
-                        style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"
+                <a href="/prompts/{{ prompt.id }}#book-{{ book.id }}">
+                    <img src="https://covers.openlibrary.org/b/id/{{ book.cover_id }}-M.jpg" class="book-preview-cover"
                         title="{{ book.title }}">
                 </a>
                 {% else %}
-                <div
-                    style="width: 100%; height: 120px; background: #eee; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; text-align: center; color: #999;">
+                <div class="book-preview-no-cover">
                     No Cover
                 </div>
                 {% endif %}
@@ -60,22 +56,21 @@
         </div>
         {% endif %}
 
-        <div class="prompt-meta"
-            style="font-size: 0.9rem; color: #888; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f0f0f0; padding-top: 15px; margin-top: 10px;">
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <img src="https://ui-avatars.com/api/?name={{ prompt.creator_username }}&background=random&size=24&rounded=true"
-                    style="vertical-align: middle;">
-                <span>By <a href="/users/{{ prompt.creator_username }}"
-                        style="color: #d9534f; text-decoration: none;">{{ prompt.creator_username }}</a></span>
-                <span style="margin: 0 5px;">•</span>
-                <div class="prompt-tags" style="margin: 0; display: inline;">
+        <div class="prompt-meta-row">
+            <div class="creator-info">
+                <img
+                    src="https://ui-avatars.com/api/?name={{ prompt.creator_username }}&background=random&size=24&rounded=true">
+                <span>By <a href="/users/{{ prompt.creator_username }}" class="creator-name">{{ prompt.creator_username
+                        }}</a></span>
+                <span class="separator">•</span>
+                <div class="prompt-tags u-margin-b-0 u-display-inline">
                     {% for tag in prompt.display_tags %}
-                    <a href="/?q={{ tag }}" class="tag" style="text-decoration: none; color: #444;">{{ tag }}</a>
+                    <a href="/?q={{ tag }}" class="tag">{{ tag }}</a>
                     {% endfor %}
                 </div>
             </div>
 
-            <div style="display: flex; gap: 15px;">
+            <div class="stats-group">
                 <span title="Total Books">📚 {{ prompt.total_books }}</span>
                 <span title="Total Voters">👥 {{ prompt.total_voters
                     }}</span>
@@ -91,7 +86,7 @@
 <!-- Create Prompt Modal -->
 <div id="createPromptModal" class="modal-overlay">
     <div class="modal">
-        <h2 style="margin-bottom: 20px;">Start a New Prompt</h2>
+        <h2 class="u-margin-b-20">Start a New Prompt</h2>
         <form action="/prompts" method="post">
             <div class="form-group">
                 <label>The Best Book On...</label>
@@ -102,7 +97,7 @@
                 <textarea name="description" rows="3" placeholder="What kind of books are you looking for?"
                     required></textarea>
             </div>
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+            <div class="form-actions">
                 <button type="button" class="btn btn-outline" onclick="closeModal('createPromptModal')">Cancel</button>
                 <button type="submit" class="btn btn-primary">Create Prompt</button>
             </div>

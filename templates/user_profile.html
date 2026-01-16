@@ -3,20 +3,19 @@
 {% block title %}User Profile - {{ profile_user }}{% endblock %}
 
 {% block content %}
-<div
-    style="background: white; padding: 40px; border-radius: 12px; margin-bottom: 40px; box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 20px;">
+<div class="profile-header">
     <img src="https://ui-avatars.com/api/?name={{ profile_user }}&background=random&size=80&rounded=true"
-        style="width: 80px; height: 80px; border-radius: 50%;">
+        class="profile-avatar">
 
     <div>
-        <h1 style="margin-bottom: 5px; font-size: 2rem;">{{ profile_user }}</h1>
+        <h1 class="u-margin-b-5" style="font-size: 2rem;">{{ profile_user }}</h1>
         <p style="color: #666;">
             Joined the hunt for the best books.
         </p>
     </div>
 </div>
 
-<div class="tabs" style="display: flex; gap: 20px; border-bottom: 1px solid #eee; margin-bottom: 30px;">
+<div class="tabs">
     <button class="tab-btn active" id="btn-votes" onclick="switchTab('votes')">Votes ({{ votes|length }})</button>
     <button class="tab-btn" id="btn-prompts" onclick="switchTab('prompts')">Prompts ({{ prompts|length }})</button>
     <button class="tab-btn" id="btn-nominations" onclick="switchTab('nominations')">Nominations ({{ submissions|length
@@ -297,28 +296,7 @@
 
 
 
-<style>
-    .tab-btn {
-        background: none;
-        border: none;
-        padding: 10px 0;
-        font-size: 1.1rem;
-        cursor: pointer;
-        color: #888;
-        border-bottom: 2px solid transparent;
-        transition: all 0.2s;
-        font-weight: 500;
-    }
-
-    .tab-btn:hover {
-        color: var(--text-color);
-    }
-
-    .tab-btn.active {
-        color: var(--primary-color);
-        border-bottom-color: var(--primary-color);
-    }
-</style>
+<!-- Style moved to static/style.css -->
 
 <script>
     function switchTab(tabId) {
@@ -373,19 +351,15 @@
             const list = document.getElementById('votersList');
             data.voters.forEach(v => {
                 const div = document.createElement('div');
-                div.style.padding = '12px 10px';
-                div.style.borderBottom = '1px solid #f9f9f9';
-                div.style.display = 'flex';
-                div.style.alignItems = 'center';
-                div.style.justifyContent = 'space-between';
+                div.className = 'voter-row';
 
                 const icon = v.value > 0 ? '👍' : '👎';
 
                 div.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="flex-center" style="gap: 12px;">
                         <span style="font-size: 1.2rem;">${icon}</span>
-                        <img src="https://ui-avatars.com/api/?name=${v.username}&background=random&size=32&rounded=true" style="vertical-align: middle;">
-                        <a href="/users/${v.username}" style="text-decoration: none; color: #d9534f; font-weight: 500;">${v.username}</a>
+                        <img src="https://ui-avatars.com/api/?name=${v.username}&background=random&size=32&rounded=true" style="vertical-align: middle; border-radius: 50%;">
+                        <a href="/users/${v.username}" class="creator-name">${v.username}</a>
                     </div>
                     <button class="btn btn-sm btn-outline" disabled style="opacity: 0.5; cursor: not-allowed; font-size: 0.8rem; padding: 2px 8px;">Follow</button>
                 `;

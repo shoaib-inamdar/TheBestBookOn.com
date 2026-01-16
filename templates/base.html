@@ -13,20 +13,17 @@
 
 <body>
     <header class="container">
-        <a href="/" class="logo"
-            style="display: flex; align-items: center; gap: 10px; text-decoration: none; margin: 10px 0;">
-            <img src="/static/logo.png" alt="Logo" style="height: 40px; width: auto;">
+        <a href="/" class="header-logo">
+            <img src="/static/logo.png" alt="Logo">
             TheBestBookOn.com
         </a>
 
-        <div style="flex-grow: 1; margin: 0 40px; position: relative;">
+        <div class="header-search">
             <form action="/" method="get" id="searchForm">
                 <input type="text" name="q" id="searchInput" placeholder="Search prompts by tag..."
-                    value="{{ request.query_params.get('q', '') }}" autocomplete="off"
-                    style="width: 100%; padding: 8px 15px; border-radius: 20px; border: 1px solid #ddd; background: #f9f9f9; font-size: 0.9rem;">
+                    value="{{ request.query_params.get('q', '') }}" autocomplete="off" class="header-search-input">
             </form>
-            <div id="headerSearchSuggestions" class="search-results"
-                style="position: absolute; top: 100%; left: 0; right: 0; background: white; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 0 0 8px 8px; margin-top: 5px;">
+            <div id="headerSearchSuggestions" class="search-results search-results-overlay">
             </div>
 
             <script>
@@ -79,7 +76,7 @@
                 })();
             </script>
         </div>
-        <div style="display: flex; gap: 15px; align-items: center;">
+        <div class="flex-center">
             {% if user %}
             <span>Hello, <a href="/users/{{ user }}" style="text-decoration: none; color: inherit;"><strong>{{ user
                         }}</strong></a></span>
@@ -94,8 +91,7 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="container"
-        style="margin-top: 60px; padding-bottom: 40px; color: #888; font-size: 0.9rem; text-align: center;">
+    <footer class="container u-margin-t-40 u-margin-b-40" style="color: #888; font-size: 0.9rem; text-align: center;">
         &copy; 2026 TheBestBookOn.com
     </footer>
 

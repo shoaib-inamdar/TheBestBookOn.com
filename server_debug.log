@@ -1,0 +1,11 @@
+INFO:     Started server process [4712]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:56734 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56734 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56736 - "GET /static/style.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56734 - "GET /static/logo.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56734 - "POST /api/prompts/14/toggle_favorite HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56766 - "POST /api/prompts/14/toggle_favorite HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56766 - "POST /api/prompts/14/toggle_favorite HTTP/1.1" 200 OK

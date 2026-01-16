@@ -7,16 +7,15 @@
     <a href="/" style="color: #666; font-size: 0.9rem;">&larr; Back to all prompts</a>
 </div>
 
-<div
-    style="background: white; padding: 40px; border-radius: 12px; margin-bottom: 40px; box-shadow: var(--shadow-sm); position: relative;">
+<div class="card card-relative" style="padding: 40px; margin-bottom: 40px;">
     <button class="favorite-btn {% if prompt.is_favorited %}active{% endif %}"
         onclick="toggleFavorite(event, {{ prompt.id }}, this)" title="Heart this prompt"
-        style="position: absolute; top: 20px; right: 20px;">
+        style="top: 20px; right: 20px;">
         ♥
     </button>
-    <h1 style="margin-bottom: 10px;">The Best Book On <span style="color: var(--primary-color);">{{ prompt.title
+    <h1 class="u-margin-b-10">The Best Book On <span style="color: var(--primary-color);">{{ prompt.title
             }}</span></h1>
-    <p class="lead" style="margin-bottom: 20px;">{{ prompt.description }}</p>
+    <p class="lead u-margin-b-20">{{ prompt.description }}</p>
 
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <div class="prompt-tags">
@@ -31,14 +30,15 @@
         {% endif %}
     </div>
 
-    <div class="prompt-meta"
-        style="font-size: 0.9rem; color: #888; display: flex; gap: 20px; align-items: center; border-top: 1px solid #f0f0f0; padding-top: 15px; margin-top: 20px;">
-        <span title="Total Books">📚 <span class="sub-count-val-{{ prompt.id }}">{{ prompt.submissions | length
-                }}</span> Books</span>
-        <span title="Total Voters">👥 {{ prompt.total_voters }} Voters</span>
-        <span title="Total Votes">🗳️ {{ prompt.total_votes }} Votes</span>
-        <span title="Total Favorites">❤️ <span class="fav-count-val-{{ prompt.id }}">{{ prompt.favorites | length
-                }}</span> Favorites</span>
+    <div class="prompt-meta-row">
+        <div class="stats-group">
+            <span title="Total Books">📚 <span class="sub-count-val-{{ prompt.id }}">{{ prompt.submissions | length
+                    }}</span> Books</span>
+            <span title="Total Voters">👥 {{ prompt.total_voters }} Voters</span>
+            <span title="Total Votes">🗳️ {{ prompt.total_votes }} Votes</span>
+            <span title="Total Favorites">❤️ <span class="fav-count-val-{{ prompt.id }}">{{ prompt.favorites | length
+                    }}</span> Favorites</span>
+        </div>
     </div>
 </div>
 
@@ -176,8 +176,8 @@
 
 <!-- Voters Modal -->
 <div id="votersModal" class="modal-overlay">
-    <div class="modal" style="max-height: 80vh; display: flex; flex-direction: column; width: 400px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div class="modal voters-modal-content">
+        <div class="flex-center-between u-margin-b-20">
             <h2 style="margin: 0;">Voters</h2>
             <button type="button" class="btn btn-outline" style="border:none; font-size: 1.5rem; padding: 0 10px;"
                 onclick="closeVotersModal()">×</button>
@@ -221,19 +221,15 @@
             const list = document.getElementById('votersList');
             data.voters.forEach(v => {
                 const div = document.createElement('div');
-                div.style.padding = '12px 10px';
-                div.style.borderBottom = '1px solid #f9f9f9';
-                div.style.display = 'flex';
-                div.style.alignItems = 'center';
-                div.style.justifyContent = 'space-between';
+                div.className = 'voter-row';
 
                 const icon = v.value > 0 ? '👍' : '👎';
 
                 div.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="flex-center" style="gap: 12px;">
                         <span style="font-size: 1.2rem;">${icon}</span>
-                        <img src="https://ui-avatars.com/api/?name=${v.username}&background=random&size=32&rounded=true" style="vertical-align: middle;">
-                        <a href="/users/${v.username}" style="text-decoration: none; color: #d9534f; font-weight: 500;">${v.username}</a>
+                        <img src="https://ui-avatars.com/api/?name=${v.username}&background=random&size=32&rounded=true" style="vertical-align: middle; border-radius: 50%;">
+                        <a href="/users/${v.username}" class="creator-name">${v.username}</a>
                     </div>
                     <button class="btn btn-sm btn-outline" disabled style="opacity: 0.5; cursor: not-allowed; font-size: 0.8rem; padding: 2px 8px;">Follow</button>
                 `;
