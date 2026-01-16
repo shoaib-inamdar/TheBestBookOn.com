@@ -345,6 +345,20 @@ async def search_books(q: str):
             return 0
             
         if 'docs' in data:
+            for doc in data['docs']:
+                editions_data = doc.get('editions', {})
+                edition_docs = editions_data.get('docs', [])
+                if edition_docs:
+                    first_edition = edition_docs[0]
+                    # Use the first edition's key as the definitive edition_key
+                    edition_id = first_edition.get('key', '').split('/')[-1]
+                    doc['edition_key'] = [edition_id]
+                    # Update other fields from edition if available
+                    doc['cover_i'] = first_edition.get('cover_i', doc.get('cover_i'))
+                    doc['ebook_access'] = first_edition.get('ebook_access', doc.get('ebook_access'))
+                    if first_edition.get('title'):
+                        doc['title'] = first_edition.get('title')
+
             # stable sort: priority first
             data['docs'].sort(key=priority_score, reverse=True)
             # trim to 5 after sorting
