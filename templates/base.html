@@ -114,6 +114,12 @@
                 } else {
                     btn.classList.remove('active');
                 }
+
+                // Update all count spans for this prompt
+                const countSpans = document.querySelectorAll(`.fav-count-val-${promptId}`);
+                countSpans.forEach(span => {
+                    span.innerText = data.count;
+                });
             } catch (err) {
                 console.error("Failed to toggle favorite", err);
             }

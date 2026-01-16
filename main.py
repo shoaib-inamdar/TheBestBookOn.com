@@ -5,9 +5,8 @@ from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, UniqueConstraint, Boolean, Text, Table
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, UniqueConstraint, Boolean, Text, Table, func, text
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session, relationship
 from sqlalchemy.orm import sessionmaker, Session, relationship
 import httpx
 import secrets
@@ -58,6 +57,42 @@ class Prompt(Base):
 
     submissions = relationship("Submission", back_populates="prompt")
     favorites = relationship("Favorite", back_populates="prompt")
+
+    @property
+    def total_favorites(self):
+        return len(self.favorites)
+
+    @property
+    def total_books(self):
+        return len(self.submissions)
+
+    @property
+    def total_votes(self):
+        return sum(s.score for s in self.submissions)
+
+    @property
+    def total_voters(self):
+        voters = set()
+        for s in self.submissions:
+            for v in s.votes:
+                voters.add(v.voter_username)
+        return len(voters)
+
+    @property
+    def top_books(self):
+        subs = list(self.submissions)
+        subs.sort(key=lambda s: s.score, reverse=True)
+        return subs[:10]
+
+    @property
+    def display_tags(self):
+        from collections import Counter
+        all_tags = []
+        for s in self.submissions:
+            for t in s.tags:
+                all_tags.append(t.name)
+        tag_counts = Counter(all_tags)
+        return [t for t, _ in tag_counts.most_common(5)]
 
 class Submission(Base):
     __tablename__ = "submissions"
@@ -224,46 +259,11 @@ def read_root(request: Request, q: Optional[str] = None, db: Session = Depends(g
         favs = db.query(Favorite).filter(Favorite.username == user).all()
         user_fav_ids = {f.prompt_id for f in favs}
     
-    # Enrich prompts with stats
-    prompts_data = []
+    # Enrich prompts with user-specific state
     for p in prompts:
-        subs = p.submissions
-        subs.sort(key=lambda s: s.score, reverse=True)
-        top_books = subs[:10]
+        p.is_favorited = p.id in user_fav_ids
         
-        total_votes = sum([s.score for s in subs])
-        # Count unique voters
-        # This is a bit inefficient (n+1) but fine for "few hundred prompts" limit
-        voter_ids = set()
-        tag_counts = {}
-        
-        for s in subs:
-            for v in s.votes:
-                voter_ids.add(v.voter_username)
-            # Aggregate tags
-            for t in s.tags:
-                tag_counts[t.name] = tag_counts.get(t.name, 0) + 1
-                    
-        total_voters = len(voter_ids)
-        
-        # Get top 5 tags
-        top_tags = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[:5]
-        display_tags = [t[0] for t in top_tags]
-        
-        prompts_data.append({
-            "id": p.id,
-            "title": p.title,
-            "description": p.description,
-            "creator_username": p.creator_username,
-            "display_tags": display_tags,
-            "top_books": top_books,
-            "total_books": len(subs),
-            "total_votes": total_votes,
-            "total_voters": total_voters,
-            "is_favorited": p.id in user_fav_ids
-        })
-        
-    return templates.TemplateResponse("index.html", {"request": request, "prompts": prompts_data, "user": user})
+    return templates.TemplateResponse("index.html", {"request": request, "prompts": prompts, "user": user})
 
 @app.get("/prompts/{prompt_id}", response_class=HTMLResponse)
 def read_prompt(prompt_id: int, request: Request, db: Session = Depends(get_db), user: str = Depends(get_current_user)):
@@ -290,9 +290,12 @@ def read_prompt(prompt_id: int, request: Request, db: Session = Depends(get_db),
         for t in sub.tags:
             tag_counts[t.name] = tag_counts.get(t.name, 0) + 1
     
-    top_tags = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[:3]
-    prompt.display_tags = [t[0] for t in top_tags]
-    
+    # Set is_favorited for the prompt
+    prompt.is_favorited = False
+    if user:
+        fav = db.query(Favorite).filter(Favorite.prompt_id == prompt_id, Favorite.username == user).first()
+        prompt.is_favorited = fav is not None
+
     return templates.TemplateResponse("prompt_detail.html", {
         "request": request, 
         "prompt": prompt, 
@@ -329,8 +332,8 @@ def create_prompt(
 @app.get("/api/search_books")
 async def search_books(q: str):
     async with httpx.AsyncClient() as client:
-        # Searching fields=key,title,author_name,cover_i,first_publish_year,edition_key,ebook_access
-        url = f"https://openlibrary.org/search.json?q={q}&fields=key,title,author_name,cover_i,first_publish_year,edition_key,ebook_access&limit=10"
+        # Searching fields=key,title,author_name,cover_i,first_publish_year,editions,edition_key,ebook_access
+        url = f"https://openlibrary.org/search.json?q={q}&fields=key,title,author_name,cover_i,first_publish_year,editions,edition_key,ebook_access&limit=10"
         resp = await client.get(url)
         data = resp.json()
         
@@ -474,6 +477,9 @@ def toggle_favorite(
     db: Session = Depends(get_db),
     user: str = Depends(get_current_user)
 ):
+    if not user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
     existing = db.query(Favorite).filter(
         Favorite.prompt_id == prompt_id,
         Favorite.username == user
@@ -488,8 +494,11 @@ def toggle_favorite(
         favorited = True
     
     db.commit()
-    db.commit()
-    return {"favorited": favorited}
+    
+    # Get updated count
+    count = db.query(Favorite).filter(Favorite.prompt_id == prompt_id).count()
+    
+    return {"favorited": favorited, "count": count}
 
 @app.get("/api/prompts/{prompt_id}/voters")
 def get_prompt_voters(prompt_id: int, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
@@ -591,17 +600,8 @@ def _enrich_prompt_details(prompt_list, user_fav_ids=None):
                 all_tags.append(t.name)
         
         tag_counts = Counter(all_tags)
-        p.display_tags = [t for t, _ in tag_counts.most_common(5)]
-        
-        # Calculate stats for display
-        p.total_books = len(subs)
-        p.total_votes = sum(s.score for s in subs)
-        
-        voter_set = set()
-        for s in subs:
-            for v in s.votes:
-                voter_set.add(v.voter_username)
-        p.total_voters = len(voter_set)
+        # We'll use the property instead
+        pass
         
         # Set is_favorited for UI
         p.is_favorited = p.id in user_fav_ids if user_fav_ids else False

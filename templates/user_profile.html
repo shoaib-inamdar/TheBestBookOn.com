@@ -120,9 +120,12 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 15px;">
-                    <span title="Total Books">📚 {{ prompt.total_books }}</span>
+                    <span title="Total Books">📚 <span class="sub-count-val-{{ prompt.id }}">{{ prompt.submissions |
+                            length }}</span></span>
                     <span title="Total Voters">👥 {{ prompt.total_voters }}</span>
                     <span title="Total Votes">🗳️ {{ prompt.total_votes }}</span>
+                    <span title="Total Favorites">❤️ <span class="fav-count-val-{{ prompt.id }}">{{ prompt.favorites |
+                            length }}</span></span>
                 </div>
             </div>
         </div>
@@ -276,9 +279,12 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 15px;">
-                    <span title="Total Books">📚 {{ prompt.total_books }}</span>
+                    <span title="Total Books">📚 <span class="sub-count-val-{{ prompt.id }}">{{ prompt.submissions |
+                            length }}</span></span>
                     <span title="Total Voters">👥 {{ prompt.total_voters }}</span>
                     <span title="Total Votes">🗳️ {{ prompt.total_votes }}</span>
+                    <span title="Total Favorites">❤️ <span class="fav-count-val-{{ prompt.id }}">{{ prompt.favorites |
+                            length }}</span></span>
                 </div>
             </div>
         </div>

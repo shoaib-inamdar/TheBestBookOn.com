@@ -80,6 +80,8 @@
                 <span title="Total Voters">👥 {{ prompt.total_voters
                     }}</span>
                 <span title="Total Votes">🗳️ {{ prompt.total_votes }}</span>
+                <span title="Total Favorites">❤️ <span class="fav-count-val-{{ prompt.id }}">{{ prompt.favorites |
+                        length }}</span></span>
             </div>
         </div>
     </div>

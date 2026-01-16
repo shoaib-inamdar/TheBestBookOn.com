@@ -7,7 +7,13 @@
     <a href="/" style="color: #666; font-size: 0.9rem;">&larr; Back to all prompts</a>
 </div>
 
-<div style="background: white; padding: 40px; border-radius: 12px; margin-bottom: 40px; box-shadow: var(--shadow-sm);">
+<div
+    style="background: white; padding: 40px; border-radius: 12px; margin-bottom: 40px; box-shadow: var(--shadow-sm); position: relative;">
+    <button class="favorite-btn {% if prompt.is_favorited %}active{% endif %}"
+        onclick="toggleFavorite(event, {{ prompt.id }}, this)" title="Heart this prompt"
+        style="position: absolute; top: 20px; right: 20px;">
+        ♥
+    </button>
     <h1 style="margin-bottom: 10px;">The Best Book On <span style="color: var(--primary-color);">{{ prompt.title
             }}</span></h1>
     <p class="lead" style="margin-bottom: 20px;">{{ prompt.description }}</p>
@@ -23,6 +29,16 @@
         {% else %}
         <a href="/login" class="btn btn-primary">Login to Nominate</a>
         {% endif %}
+    </div>
+
+    <div class="prompt-meta"
+        style="font-size: 0.9rem; color: #888; display: flex; gap: 20px; align-items: center; border-top: 1px solid #f0f0f0; padding-top: 15px; margin-top: 20px;">
+        <span title="Total Books">📚 <span class="sub-count-val-{{ prompt.id }}">{{ prompt.submissions | length
+                }}</span> Books</span>
+        <span title="Total Voters">👥 {{ prompt.total_voters }} Voters</span>
+        <span title="Total Votes">🗳️ {{ prompt.total_votes }} Votes</span>
+        <span title="Total Favorites">❤️ <span class="fav-count-val-{{ prompt.id }}">{{ prompt.favorites | length
+                }}</span> Favorites</span>
     </div>
 </div>
 
@@ -298,22 +314,33 @@
 
         function selectBook(doc) {
             let key = '';
-            if (doc.edition_key && doc.edition_key.length > 0) {
+            let title = doc.title;
+            let cover_i = doc.cover_i;
+            let ebook_access = doc.ebook_access;
+
+            // Use specific edition data if available
+            if (doc.editions && doc.editions.docs && doc.editions.docs.length > 0) {
+                const bestEdition = doc.editions.docs[0];
+                key = bestEdition.key.split('/').pop(); // /books/OL...M -> OL...M
+                if (bestEdition.title) title = bestEdition.title;
+                if (bestEdition.cover_i) cover_i = bestEdition.cover_i;
+                if (bestEdition.ebook_access) ebook_access = bestEdition.ebook_access;
+            } else if (doc.edition_key && doc.edition_key.length > 0) {
                 key = doc.edition_key[0];
             } else {
                 key = doc.key.split('/').pop();
             }
 
             document.getElementById('selectedEditionKey').value = key;
-            document.getElementById('selectedTitleInput').value = doc.title;
-            document.getElementById('selectedCoverId').value = doc.cover_i || '';
-            document.getElementById('selectedEbookAccess').value = doc.ebook_access || '';
+            document.getElementById('selectedTitleInput').value = title;
+            document.getElementById('selectedCoverId').value = cover_i || '';
+            document.getElementById('selectedEbookAccess').value = ebook_access || '';
 
-            document.getElementById('selectedTitleDisplay').innerText = doc.title;
+            document.getElementById('selectedTitleDisplay').innerText = title;
 
             const coverImg = document.getElementById('selectedCover');
-            if (doc.cover_i) {
-                coverImg.src = `https://covers.openlibrary.org/b/id/${doc.cover_i}-S.jpg`;
+            if (cover_i) {
+                coverImg.src = `https://covers.openlibrary.org/b/id/${cover_i}-S.jpg`;
                 coverImg.style.display = 'block';
             } else {
                 coverImg.style.display = 'none';
