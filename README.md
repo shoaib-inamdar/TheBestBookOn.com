@@ -1,6 +1,8 @@
 # TheBestBookOn.com
 
-![The Best Book On logo](static/logo.png)
+<p align="center">
+  <img src="static/logo.png" alt="The Best Book On logo" width="400">
+</p>
 
 A community-curated platform for discovering the best books on any topic, powered by collective wisdom and Internet Archive integration.
 
@@ -66,6 +68,8 @@ venv\Scripts\activate
 ```bash
 pip install fastapi uvicorn sqlalchemy httpx requests python-dotenv jinja2 internetarchive
 ```
+
+**Note**: For production use, consider creating a `requirements.txt` file with pinned versions for better reproducibility.
 
 **Required Python packages:**
 - `fastapi` - Web framework
