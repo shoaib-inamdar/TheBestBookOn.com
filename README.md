@@ -231,7 +231,30 @@ The application uses a relational database with the following core entities:
 
 ### Running Tests
 
-Currently, the application does not have a formal test suite. Contributions welcome!
+The project includes basic tests that verify core functionality:
+- OpenLibrary search API integration
+- Authentication requirements for API endpoints
+- Production database protection (tests use temporary databases)
+
+**Install test dependencies:**
+```bash
+pip install -r requirements.txt
+```
+
+**Run the test suite:**
+```bash
+# Run all tests
+pytest test_main.py -v
+
+# Run specific test classes
+pytest test_main.py::TestOpenLibrarySearch -v
+pytest test_main.py::TestAuthenticationRequired -v
+
+# Run with coverage
+pytest test_main.py --cov=main --cov-report=term-missing
+```
+
+**Important:** Tests never write to the production database (`thebestbookon.db`). Each test uses a temporary test database that is created and destroyed automatically.
 
 ### Database Management
 
