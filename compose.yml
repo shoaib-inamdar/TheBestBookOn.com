@@ -5,9 +5,9 @@ services:
     restart: unless-stopped
     environment:
       - SECRET_KEY=${SECRET_KEY:-auto-generated-secret-key-change-in-production}
-    volumes:
-      # Mount database as volume to persist data across restarts
-      - app-data:/app
+    # Uncomment to persist database between container rebuilds:
+    # volumes:
+    #   - ./data:/app
     networks:
       - thebestbookon-network
     # Don't expose port directly, nginx will proxy
@@ -26,10 +26,6 @@ services:
       - app
     networks:
       - thebestbookon-network
-
-volumes:
-  app-data:
-    driver: local
 
 networks:
   thebestbookon-network:
