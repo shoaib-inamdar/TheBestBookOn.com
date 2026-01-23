@@ -292,6 +292,55 @@ docker compose logs -f app
 docker compose exec app /bin/bash
 ```
 
+## Production Deployment
+
+### Environment Variables
+
+For production deployment, set a custom `SECRET_KEY` in your environment:
+
+```bash
+export SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
+docker compose up -d
+```
+
+Or create a `.env` file:
+```
+SECRET_KEY=your-secure-secret-key-here
+```
+
+### Port Configuration
+
+By default, the application is exposed on port 8080. To change this, modify the `compose.yml` file:
+
+```yaml
+services:
+  nginx:
+    ports:
+      - "80:80"  # Change 8080 to 80 for production
+```
+
+### HTTPS/SSL
+
+For production, consider adding SSL certificates:
+
+1. Use a reverse proxy like Caddy or Traefik
+2. Or modify the nginx configuration to include SSL certificates
+3. Or deploy behind a load balancer with SSL termination
+
+### Data Persistence
+
+The Docker setup uses a named volume (`app-data`) to persist the database. To backup:
+
+```bash
+# Backup the database
+docker compose exec app cp thebestbookon.db /tmp/backup.db
+docker cp thebestbookon-app:/tmp/backup.db ./backup.db
+
+# Restore from backup
+docker cp ./backup.db thebestbookon-app:/app/thebestbookon.db
+docker compose restart app
+```
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit issues or pull requests.

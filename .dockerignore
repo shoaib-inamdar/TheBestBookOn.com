@@ -1,0 +1,42 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Application specific
+.env
+thebestbookon.db
+server.log
+server_debug.log
+
+# Docker
+.dockerignore
+Dockerfile
+compose.yml
+nginx.conf
+
+# Documentation
+README.md
+LICENSE
