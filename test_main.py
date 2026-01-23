@@ -62,27 +62,10 @@ def client(test_db):
     app.dependency_overrides.clear()
 
 
-@pytest.fixture
-def authenticated_client(client):
-    """Create a test client with a logged-in user session."""
-    with client as c:
-        # Manually set the session to simulate a logged-in user
-        with c.websocket_connect("/") as ws:
-            pass  # This won't work, we need another approach
-    
-    # Alternative: use session manipulation
-    # For FastAPI/Starlette, we can set cookies directly
-    # But TestClient doesn't expose session easily, so we'll use a different approach
-    
-    # Instead, let's just return the client and the tests will handle mocking
-    return client
-
-
 class TestOpenLibrarySearch:
     """Tests for OpenLibrary search API integration."""
     
-    @pytest.mark.asyncio
-    async def test_search_books_returns_results(self, client):
+    def test_search_books_returns_results(self, client):
         """Test that searching for books via OpenLibrary returns expected data structure."""
         # Mock the OpenLibrary API response
         mock_response = {
@@ -141,8 +124,7 @@ class TestOpenLibrarySearch:
         assert "title" in first_result
         assert "edition_key" in first_result
     
-    @pytest.mark.asyncio
-    async def test_search_books_handles_empty_query(self, client):
+    def test_search_books_handles_empty_query(self, client):
         """Test that search handles edge cases appropriately."""
         mock_response = {
             "numFound": 0,
@@ -160,8 +142,7 @@ class TestOpenLibrarySearch:
         assert "numFound" in data
         assert len(data["docs"]) == 0
     
-    @pytest.mark.asyncio
-    async def test_search_books_prioritizes_ebook_access(self, client):
+    def test_search_books_prioritizes_ebook_access(self, client):
         """Test that search results prioritize books with ebook access."""
         # Create mock data where one book has ebook access and others don't
         mock_response = {
