@@ -6,6 +6,7 @@ production database (thebestbookon.db).
 """
 
 import os
+import sqlite3
 import tempfile
 import pytest
 from fastapi.testclient import TestClient
@@ -350,7 +351,6 @@ class TestProductionDatabaseProtection:
         # In a real scenario, we'd compare before/after, but for this test
         # we just verify it exists and has data
         if os.path.exists(prod_db_path):
-            import sqlite3
             conn = sqlite3.connect(prod_db_path)
             cursor = conn.cursor()
             
