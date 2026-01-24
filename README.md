@@ -37,20 +37,70 @@ TheBestBookOn is built with:
 
 ## Installation & Setup
 
-### Prerequisites
+### Quick Start with Docker Compose (Recommended)
 
-- Python 3.7 or higher
-- pip (Python package manager)
+The easiest way to run TheBestBookOn is with Docker Compose, which includes the application server and nginx reverse proxy.
+
+#### Prerequisites
+
+- Docker and Docker Compose
 - Git
 
-### 1. Clone the Repository
+#### Steps
+
+1. **Clone the Repository**
 
 ```bash
 git clone https://github.com/Open-Book-Genome-Project/TheBestBookOn.com.git
 cd TheBestBookOn.com
 ```
 
-### 2. Set Up Python Virtual Environment (Recommended)
+2. **Start the Application**
+
+```bash
+docker compose up -d
+```
+
+The application will be available at: **http://localhost:8080**
+
+The setup includes:
+- FastAPI application server with pre-populated seed database
+- Nginx reverse proxy for production-grade request handling
+- Automatic secret key generation
+- Persistent data storage
+
+3. **Stop the Application**
+
+```bash
+docker compose down
+```
+
+4. **View Logs**
+
+```bash
+docker compose logs -f
+```
+
+### Manual Installation (Alternative)
+
+If you prefer to run the application without Docker:
+
+#### Prerequisites
+
+- Python 3.7 or higher
+- pip (Python package manager)
+- Git
+
+#### Steps
+
+1. **Clone the Repository**
+
+```bash
+git clone https://github.com/Open-Book-Genome-Project/TheBestBookOn.com.git
+cd TheBestBookOn.com
+```
+
+2. **Set Up Python Virtual Environment**
 
 ```bash
 # Create virtual environment
@@ -63,71 +113,22 @@ source venv/bin/activate
 venv\Scripts\activate
 ```
 
-### 3. Install Dependencies
+3. **Install Dependencies**
 
 ```bash
-pip install fastapi uvicorn sqlalchemy httpx requests python-dotenv jinja2 internetarchive
+pip install -r requirements.txt
 ```
 
-**Note**: For production use, consider creating a `requirements.txt` file with pinned versions for better reproducibility.
+4. **Initialize the Database**
 
-**Required Python packages:**
-- `fastapi` - Web framework
-- `uvicorn` - ASGI server for FastAPI
-- `sqlalchemy` - Database ORM
-- `httpx` - Async HTTP client
-- `requests` - HTTP library
-- `python-dotenv` - Environment variable management
-- `jinja2` - Template engine
-- `internetarchive` - Internet Archive authentication
-
-### 4. Initialize the Database
-
-The application comes with a pre-populated seed database (`thebestbookon_seed.db`) containing curated prompts and book recommendations.
-
-**Option A: Use the Seed Database (Recommended)**
+The application comes with a pre-populated seed database (`thebestbookon_seed.db`).
 
 ```bash
 # Copy the seed database to create your working database
 cp thebestbookon_seed.db thebestbookon.db
 ```
 
-**Option B: Create a Fresh Database**
-
-If you want to start from scratch:
-
-```bash
-# The database will be created automatically on first run
-# To populate it with seed data:
-python populate_db.py
-```
-
-**Option C: Patch/Update Existing Database**
-
-To apply updates to an existing database:
-
-```bash
-python patch_db.py
-```
-
-### 5. Configure Environment
-
-The application automatically generates a `.env` file with a secure `SECRET_KEY` on first run. No manual configuration is needed for basic usage.
-
-**Optional**: If you want to customize settings, create a `.env` file:
-
-```bash
-SECRET_KEY=your-secret-key-here
-```
-
-Generate a secure secret key with Python:
-
-```python
-import secrets
-print(secrets.token_urlsafe(32))
-```
-
-### 6. Run the Application
+5. **Run the Application**
 
 ```bash
 # Development mode with auto-reload
@@ -139,7 +140,7 @@ uvicorn main:app --host 0.0.0.0 --port 8080
 
 The application will be available at: **http://localhost:8080**
 
-### 7. Login with Internet Archive
+### Login with Internet Archive
 
 To submit books, vote, or create prompts, you'll need to log in with your Internet Archive credentials. If you don't have an account, create one at [archive.org/account/signup](https://archive.org/account/signup).
 
@@ -152,6 +153,10 @@ TheBestBookOn.com/
 ├── main.py                    # FastAPI application (routes, models, logic)
 ├── populate_db.py             # Database seed script with curated content
 ├── patch_db.py                # Database update/patch script
+├── requirements.txt           # Python dependencies with pinned versions
+├── Dockerfile                 # Docker container configuration
+├── compose.yml                # Docker Compose multi-service setup
+├── nginx.conf                 # Nginx reverse proxy configuration
 ├── thebestbookon.db           # SQLite database (working copy)
 ├── thebestbookon_seed.db      # Pre-populated database template
 ├── .env                       # Environment variables (auto-generated)
@@ -258,16 +263,27 @@ pytest test_main.py --cov=main --cov-report=term-missing
 
 ### Database Management
 
-**View database contents:**
+**With Docker:**
+
 ```bash
+# Access the database in the running container
+docker compose exec app sqlite3 thebestbookon.db
+
+# Reset to seed data (requires restart)
+docker compose down -v
+docker compose up -d
+```
+
+**Without Docker:**
+
+```bash
+# View database contents
 sqlite3 thebestbookon.db
 sqlite> .tables
 sqlite> SELECT * FROM prompts;
 sqlite> .quit
-```
 
-**Reset to seed data:**
-```bash
+# Reset to seed data
 rm thebestbookon.db
 cp thebestbookon_seed.db thebestbookon.db
 ```
@@ -278,6 +294,74 @@ Edit `populate_db.py` or `patch_db.py` with new prompts and books, then run:
 python populate_db.py  # Full repopulation
 # or
 python patch_db.py     # Targeted updates
+```
+
+### Docker Development
+
+**Rebuild after code changes:**
+```bash
+docker compose down
+docker compose build
+docker compose up -d
+```
+
+**View application logs:**
+```bash
+docker compose logs -f app
+```
+
+**Access container shell:**
+```bash
+docker compose exec app /bin/bash
+```
+
+## Production Deployment
+
+### Environment Variables
+
+For production deployment, set a custom `SECRET_KEY` in your environment:
+
+```bash
+export SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
+docker compose up -d
+```
+
+Or create a `.env` file:
+```
+SECRET_KEY=your-secure-secret-key-here
+```
+
+### Port Configuration
+
+By default, the application is exposed on port 8080. To change this, modify the `compose.yml` file:
+
+```yaml
+services:
+  nginx:
+    ports:
+      - "80:80"  # Change 8080 to 80 for production
+```
+
+### HTTPS/SSL
+
+For production, consider adding SSL certificates:
+
+1. Use a reverse proxy like Caddy or Traefik
+2. Or modify the nginx configuration to include SSL certificates
+3. Or deploy behind a load balancer with SSL termination
+
+### Data Persistence
+
+The Docker setup uses a named volume (`app-data`) to persist the database. To backup:
+
+```bash
+# Backup the database
+docker compose exec app cp thebestbookon.db /tmp/backup.db
+docker cp thebestbookon-app:/tmp/backup.db ./backup.db
+
+# Restore from backup
+docker cp ./backup.db thebestbookon-app:/app/thebestbookon.db
+docker compose restart app
 ```
 
 ## Contributing
