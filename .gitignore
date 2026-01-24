@@ -5,3 +5,5 @@ venv/
 .DS_Store
 thebestbookon.db
 server.log
+.pytest_cache/
+*.db-journal
