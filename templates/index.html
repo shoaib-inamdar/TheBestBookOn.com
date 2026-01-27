@@ -60,14 +60,14 @@
             <div class="creator-info">
                 <img
                     src="https://ui-avatars.com/api/?name={{ prompt.creator_username }}&background=random&size=24&rounded=true">
-                <span>By <a href="/users/{{ prompt.creator_username }}" class="creator-name">{{ prompt.creator_username
-                        }}</a></span>
-                <span class="separator">•</span>
-                <div class="prompt-tags u-margin-b-0 u-display-inline">
-                    {% for tag in prompt.display_tags %}
-                    <a href="/?q={{ tag }}" class="tag">{{ tag }}</a>
-                    {% endfor %}
-                </div>
+                <span>By <a href="/users/{{ prompt.creator_username }}" class="creator-name" title="{{ prompt.creator_username }}">{{ prompt.creator_username }}</a></span>
+            </div>
+            
+            <span class="separator">•</span>
+            <div class="prompt-tags-container">
+                {% for tag in prompt.display_tags %}
+                <a href="/?q={{ tag }}" class="tag">{{ tag }}</a>
+                {% endfor %}
             </div>
 
             <div class="stats-group">
