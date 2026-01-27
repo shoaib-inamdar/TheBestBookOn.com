@@ -524,7 +524,7 @@ textarea:focus {
     text-decoration: none;
     font-weight: 500;
     display: inline-block;
-    max-width: 15ch;  /* 15 characters max */
+    max-width: 15ch; 
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -533,7 +533,7 @@ textarea:focus {
 .prompt-tags-container {
     display: flex;
     gap: 5px;
-    flex-wrap: nowrap;  /* Don't wrap - hide with ellipsis instead */
+    flex-wrap: nowrap; 
     align-items: center;
     flex:1;
     min-width: 40%;
@@ -541,20 +541,14 @@ textarea:focus {
     position: relative;
 }
 
-/* .prompt-tags-container::after {
-    content: '...';
-    position: absolute;
-    right: 0;
-    padding-left: 20px;
-    background: linear-gradient(to right, transparent, var(--card-bg) 50%);
-    pointer-events: none;} */
+
 
 .stats-group {
     display: flex;
     gap: 10px;
     flex-shrink: 0;
-    flex-wrap: wrap;  /* Never wrap */
-    white-space: nowrap;  /* Always fit on one line */
+    flex-wrap: wrap;
+    white-space: nowrap;
 }
 
 /* Book Previews */
