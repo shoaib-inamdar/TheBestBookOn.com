@@ -513,7 +513,7 @@ textarea:focus {
     flex-wrap: wrap;
 }
 
-.creator-info span{
+.creator-info span {
     display: flex;
     align-items: center;
     gap: 5px;
@@ -535,13 +535,16 @@ textarea:focus {
     gap: 5px;
     flex-wrap: nowrap; 
     align-items: center;
-    flex:1;
     min-width: 40%;
-    overflow-x: scroll;
+    overflow-x: auto;
     position: relative;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.35) transparent;
 }
 
-
+.prompt-tags-container a{
+    flex-shrink: 0;
+}
 
 .stats-group {
     display: flex;
