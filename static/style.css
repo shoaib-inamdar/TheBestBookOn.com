@@ -510,7 +510,7 @@ textarea:focus {
     gap: 10px;
     align-items: center;
     flex-shrink: 0;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 .creator-info span {
