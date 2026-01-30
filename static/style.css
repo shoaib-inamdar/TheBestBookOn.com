@@ -532,6 +532,7 @@ textarea:focus {
 
 .prompt-tags-container {
     display: flex;
+    flex: 1;
     gap: 5px;
     flex-wrap: nowrap; 
     align-items: center;
