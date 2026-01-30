@@ -1,7 +1,7 @@
 # TheBestBookOn.com
 
 <p align="center">
-  <img src="static/logo.png" alt="The Best Book On logo" width="400">
+  <img src="static/logo.png" alt="The Best Book On logo" width="250">
 </p>
 
 A community-curated platform for discovering the best books on any topic, powered by collective wisdom and Internet Archive integration.
