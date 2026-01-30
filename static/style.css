@@ -497,35 +497,61 @@ textarea:focus {
     font-size: 0.9rem;
     color: #888;
     display: flex;
-    justify-content: space-between;
+    gap: 10px;
     align-items: center;
     border-top: 1px solid #f0f0f0;
     padding-top: 15px;
     margin-top: 10px;
+    flex-wrap: wrap;
 }
 
 .creator-info {
     display: flex;
     gap: 10px;
     align-items: center;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
 }
 
-.creator-info img {
-    vertical-align: middle;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
+.creator-info span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .creator-name {
     color: var(--primary-color);
     text-decoration: none;
     font-weight: 500;
+    display: inline-block;
+    max-width: 15ch; 
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.prompt-tags-container {
+    display: flex;
+    gap: 5px;
+    flex-wrap: nowrap; 
+    align-items: center;
+    min-width: 40%;
+    overflow-x: auto;
+    position: relative;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.35) transparent;
+}
+
+.prompt-tags-container a{
+    flex-shrink: 0;
 }
 
 .stats-group {
     display: flex;
-    gap: 15px;
+    gap: 10px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    white-space: nowrap;
 }
 
 /* Book Previews */
