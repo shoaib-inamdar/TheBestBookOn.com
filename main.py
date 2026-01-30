@@ -602,20 +602,8 @@ def delete_submission(submission_id: int, db: Session = Depends(get_db), user: s
 def _enrich_prompt_details(prompt_list, user_fav_ids=None):
     from collections import Counter
     for p in prompt_list:
-        subs = p.submissions
-        # Sort by score manually since it's a dynamic property
-        subs.sort(key=lambda s: s.score, reverse=True)
-        p.top_books = subs[:10]  # Show top 10 like homepage
-        
-        # Tags for display
-        all_tags = []
-        for s in p.submissions:
-            for t in s.tags:
-                all_tags.append(t.name)
-        
-        tag_counts = Counter(all_tags)
-        # We'll use the property instead
-        pass
+        # Note: p.top_books is already a @property that returns top 10 submissions
+        # No need to set it manually
         
         # Set is_favorited for UI
         p.is_favorited = p.id in user_fav_ids if user_fav_ids else False
